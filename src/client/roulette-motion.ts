@@ -47,7 +47,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
           if (i >= totalTicks) {
             sequence.push(winner);
           } else {
-            sequence.push(activeLots.length > 0 ? activeLots[Math.floor(Math.random() * activeLots.length)] : winner);
+            sequence.push(activeLots.length > 0 ? (activeLots[Math.floor(Math.random() * activeLots.length)] ?? winner) : winner);
           }
         }
         
