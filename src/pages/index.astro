@@ -19,12 +19,55 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     <div class="bg-red-split">
       <div class="wheel-wrapper">
         <svg class="wheel-svg" viewBox="0 0 500 500" data-role="wheel">
-          <circle cx="250" cy="250" r="240" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="10"/>
-          <!-- Outer ring Deco layer -->
-          <path d="M 250 10 A 240 240 0 0 1 490 250 L 250 250 Z" fill="var(--color-crimson)"/>
-          <path d="M 490 250 A 240 240 0 0 1 250 490 L 250 250 Z" fill="#117964"/>
-          <path d="M 250 490 A 240 240 0 0 1 10 250 L 250 250 Z" fill="var(--color-gold)"/>
-          <path d="M 10 250 A 240 240 0 0 1 250 10 L 250 250 Z" fill="var(--color-black)"/>
+          <!-- Outermost decorative gold ring -->
+          <circle cx="250" cy="250" r="247" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+          
+          <!-- Outer Crimson Ring with Gold Outlines -->
+          <circle cx="250" cy="250" r="236" fill="none" stroke="var(--color-crimson)" stroke-width="18" />
+          <circle cx="250" cy="250" r="245" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+          <circle cx="250" cy="250" r="227" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+
+          <!-- 16 Wheel Slices (Black, Gold, Black, Green, Black, Red repeating) -->
+          <g class="wheel-slices">
+            <!-- Slice 0 (Black) -->
+            <path d="M 250 250 L 206.1 29.32 A 225 225 0 0 1 293.9 29.32 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 1 (Gold) -->
+            <path d="M 250 250 L 293.9 29.32 A 225 225 0 0 1 375 62.92 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+            <!-- Slice 2 (Black) -->
+            <path d="M 250 250 L 375 62.92 A 225 225 0 0 1 437.08 125 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 3 (Green) -->
+            <path d="M 250 250 L 437.08 125 A 225 225 0 0 1 470.68 206.1 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 4 (Black) -->
+            <path d="M 250 250 L 470.68 206.1 A 225 225 0 0 1 470.68 293.9 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 5 (Red) -->
+            <path d="M 250 250 L 470.68 293.9 A 225 225 0 0 1 437.08 375 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 6 (Black) -->
+            <path d="M 250 250 L 437.08 375 A 225 225 0 0 1 375 437.08 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 7 (Gold) -->
+            <path d="M 250 250 L 375 437.08 A 225 225 0 0 1 293.9 470.68 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+            <!-- Slice 8 (Black) -->
+            <path d="M 250 250 L 293.9 470.68 A 225 225 0 0 1 206.1 470.68 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 9 (Green) -->
+            <path d="M 250 250 L 206.1 470.68 A 225 225 0 0 1 125 437.08 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 10 (Black) -->
+            <path d="M 250 250 L 125 437.08 A 225 225 0 0 1 62.92 375 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 11 (Red) -->
+            <path d="M 250 250 L 62.92 375 A 225 225 0 0 1 29.32 293.9 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 12 (Black) -->
+            <path d="M 250 250 L 29.32 293.9 A 225 225 0 0 1 29.32 206.1 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 13 (Gold) -->
+            <path d="M 250 250 L 29.32 206.1 A 225 225 0 0 1 62.92 125 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+            <!-- Slice 14 (Black) -->
+            <path d="M 250 250 L 62.92 125 A 225 225 0 0 1 125 62.92 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+            <!-- Slice 15 (Green) -->
+            <path d="M 250 250 L 125 62.92 A 225 225 0 0 1 206.1 29.32 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+          </g>
+
+          <!-- Concentric Dividing Gold Ring across Slices -->
+          <circle cx="250" cy="250" r="185" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+
+          <!-- Center Hub Black Disk with Gold Outline -->
+          <circle cx="250" cy="250" r="148" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="4" />
         </svg>
         
         <div class="wheel-center-badge">

@@ -145,10 +145,18 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toContain('.wheel-wrapper');
     expect(css).toContain('.wheel-svg');
     expect(css).toContain('.wheel-center-badge');
+    expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*clip-path:\s*polygon\(/);
+    expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
     expect(css).toContain('.badge-label');
     expect(css).toContain('.badge-value');
+    expect(css).toMatch(/\.badge-value\s*\{[\s\S]*color:\s*var\(--color-crimson\);/);
     expect(css).toContain('.badge-footer');
+    expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*background:\s*var\(--color-black\);/);
+    expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*color:\s*var\(--color-white\);/);
+    expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*transform:\s*skewX\(-/);
     expect(css).toContain('.diamond-pointer');
+    expect(css).toMatch(/\.diamond-pointer\s*\{[\s\S]*background:\s*var\(--color-white\);/);
+    expect(css).toMatch(/\.diamond-pointer::after\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
   });
 
   it('configures skewed control buttons and status bar in global.css', () => {
@@ -176,13 +184,26 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(astro).toContain('class="word block-3"');
   });
 
-  it('includes SVG roulette wheel structure, winner badge, and pointer in index.astro', () => {
+  it('includes SVG roulette wheel structure with 16 slices, concentric rings, winner badge, and pointer in index.astro', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
     expect(astro).toContain('class="wheel-wrapper"');
     expect(astro).toContain('data-role="wheel"');
     expect(astro).toContain('viewBox="0 0 500 500"');
+    
+    // Check 16 slice paths inside wheel-slices
+    const pathMatches = astro.match(/<path[^>]+fill="var\(--color-(black|gold|crimson|green)\)"/g);
+    expect(pathMatches).not.toBeNull();
+    expect(pathMatches!.length).toBe(16);
+
+    // Check concentric rings (gold and crimson)
+    expect(astro).toContain('stroke="var(--color-crimson)"');
+    expect(astro).toContain('stroke="var(--color-gold)"');
+
+    // Check center badge and pointer
     expect(astro).toContain('class="wheel-center-badge"');
+    expect(astro).toContain('NOMOR TERKUNCI');
     expect(astro).toContain('data-role="winner-display"');
+    expect(astro).toContain('PEMENANG');
     expect(astro).toContain('class="diamond-pointer"');
   });
 
