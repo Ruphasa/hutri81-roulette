@@ -3,17 +3,27 @@ import { generateLots } from '../domain/lot-generation';
 import { loadRaffleState, saveRaffleState, clearRaffleState } from '../lib/persistence';
 import type { EventConfig, RaffleState } from '../domain/types';
 
+import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
+import { animateRoulette as defaultAnimateRoulette } from './roulette-motion';
+
 export interface ControllerDependencies {
   readonly config: EventConfig;
-  readonly selectWinner: (activeLots: readonly string[]) => string;
-  readonly animateRoulette: (options: any) => Promise<void>;
-  readonly storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
-  readonly now: () => string;
-  readonly reducedMotion: () => boolean;
+  readonly selectWinner?: (activeLots: readonly string[]) => string;
+  readonly animateRoulette?: (options: any) => Promise<void>;
+  readonly storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+  readonly now?: () => string;
+  readonly reducedMotion?: () => boolean;
 }
 
-export function mountRaffleApp(root: HTMLElement, deps: ControllerDependencies): () => void {
-  const { config, selectWinner, animateRoulette, storage, now, reducedMotion } = deps;
+export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDependencies> & { config: EventConfig }): () => void {
+  if (!deps?.config) throw new Error('config is required');
+  const config = deps.config;
+  const selectWinner = deps.selectWinner || defaultSelectWinner;
+  const animateRoulette = deps.animateRoulette || defaultAnimateRoulette;
+  const storage = deps.storage || window.localStorage;
+  const now = deps.now || (() => new Date().toISOString());
+  const reducedMotion = deps.reducedMotion || (() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
   
   const els = {
     wheel: root.querySelector('[data-role="wheel"]') as HTMLElement,
@@ -58,6 +68,7 @@ export function mountRaffleApp(root: HTMLElement, deps: ControllerDependencies):
 
   function render() {
     root.setAttribute('data-phase', currentUiPhase);
+    root.setAttribute('aria-busy', String(currentUiPhase === 'SPINNING'));
     
     // Error state
     if (currentUiPhase === 'ERROR') {
@@ -86,10 +97,12 @@ export function mountRaffleApp(root: HTMLElement, deps: ControllerDependencies):
     els.advanceBtn.disabled = currentUiPhase !== 'REVEAL_WINNER';
     els.resetBtn.disabled = currentUiPhase === 'SPINNING';
 
+    // Button visibility
+    els.advanceBtn.hidden = currentUiPhase !== 'REVEAL_WINNER' && currentUiPhase !== 'COMPLETE';
+    els.drawBtn.hidden = currentUiPhase === 'REVEAL_WINNER' || currentUiPhase === 'COMPLETE';
+
     // Advance button text
-    if (currentUiPhase === 'REVEAL_WINNER' && state.prizeIndex >= config.prizes.length - 1) {
-      els.advanceBtn.textContent = 'Lihat Semua Pemenang';
-    }
+    els.advanceBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'Lihat Semua Pemenang' : 'Lanjut Hadiah Berikutnya';
 
     // Winner readout
     if (currentUiPhase === 'REVEAL_WINNER' && state.winners.length > 0) {
@@ -99,7 +112,7 @@ export function mountRaffleApp(root: HTMLElement, deps: ControllerDependencies):
     }
     
     // History
-    els.winnerHistory.innerHTML = '';
+    els.winnerHistory.replaceChildren();
     for (const w of [...state.winners].reverse()) {
       const d = document.createElement('div');
       d.textContent = `${w.lotId} - ${w.prizeLabel}`;
@@ -184,6 +197,7 @@ export function mountRaffleApp(root: HTMLElement, deps: ControllerDependencies):
   }
 
   function handleKeyDown(e: KeyboardEvent) {
+    if (els.resetDialog.open) return;
     if (e.key === 'Enter') {
       if (currentUiPhase === 'IDLE') {
         handleDraw();

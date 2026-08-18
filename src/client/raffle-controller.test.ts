@@ -114,7 +114,7 @@ describe('Raffle Controller User Behavior', () => {
     
     drawBtn.click();
     
-    expect(deps.storage.setItem).toHaveBeenCalled();
+    expect(deps.storage!.setItem).toHaveBeenCalled();
     const envelope = JSON.parse(mockStorage['hutri81-raffle:v1'] || 'null');
     const stored = envelope.payload;
     expect(stored.pendingWinner.lotId).toBe('A1');
@@ -141,7 +141,7 @@ describe('Raffle Controller User Behavior', () => {
   });
 
   it('persistence write failure stops animation and shows error without selecting again', async () => {
-    deps.storage.setItem = vi.fn().mockImplementation(() => { throw new Error('Storage Full'); });
+    deps.storage!.setItem = vi.fn().mockImplementation(() => { throw new Error('Storage Full'); });
     unmount = mountRaffleApp(root, deps);
     const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
     
@@ -185,7 +185,37 @@ describe('Raffle Controller User Behavior', () => {
     const confirmBtn = root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement;
     confirmBtn.click();
     
-    expect(deps.storage.removeItem).toHaveBeenCalled();
+    expect(deps.storage!.removeItem).toHaveBeenCalled();
     expect(root.getAttribute('data-phase')).toBe('IDLE');
+  });
+
+  it('restored incompatible storage displays recovery copy', () => {
+    mockStorage['hutri81-raffle:v1'] = 'INVALID JSON';
+    unmount = mountRaffleApp(root, deps);
+    const errorEl = root.querySelector('[data-role="error"]') as HTMLElement;
+    expect(errorEl.hidden).toBe(false);
+    expect(errorEl.textContent).toContain('Format JSON tidak valid');
+    expect(root.getAttribute('data-phase')).toBe('ERROR');
+  });
+
+  it('final winner changes the primary action to Lihat Semua Pemenang', async () => {
+    unmount = mountRaffleApp(root, deps);
+    const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
+    const advanceBtn = root.querySelector('[data-role="advance"]') as HTMLButtonElement;
+    
+    // First draw
+    drawBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    
+    expect(advanceBtn.textContent).toBe('Lanjut Hadiah Berikutnya');
+    advanceBtn.click();
+
+    // Second draw
+    drawBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(advanceBtn.textContent).toBe('Lihat Semua Pemenang');
   });
 });

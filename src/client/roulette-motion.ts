@@ -11,9 +11,9 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
   const { wheel, readout, activeLots, winner, reducedMotion, durationMs = 6500 } = options;
   const duration = reducedMotion ? 250 : durationMs;
 
-  return new Promise((resolve) => {
-    let interval: ReturnType<typeof setInterval> | undefined;
+  let interval: ReturnType<typeof setInterval> | undefined;
 
+  try {
     if (!reducedMotion && activeLots.length > 0) {
       let index = 0;
       interval = setInterval(() => {
@@ -27,13 +27,16 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
       { transform: `rotate(${360 * 5}deg)` }
     ], {
       duration,
-      easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      fill: 'forwards'
     });
 
-    animation.onfinish = () => {
-      if (interval) clearInterval(interval);
-      readout.textContent = winner;
-      resolve();
-    };
-  });
+    await new Promise(resolve => {
+      animation.onfinish = resolve;
+      animation.oncancel = resolve;
+    });
+  } finally {
+    if (interval) clearInterval(interval);
+    readout.textContent = winner;
+  }
 }
