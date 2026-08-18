@@ -5,7 +5,6 @@ test.describe('Raffle Flow', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
     await page.locator('.offline-status-text').filter({ hasText: 'Siap Offline' }).waitFor({ state: 'visible' });
-    await page.goto('/draw/');
 
     // Check initial active count
     const initialActiveCountText = await page.locator('[data-role="active-count"]').innerText();

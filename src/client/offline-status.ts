@@ -38,6 +38,24 @@ export function initPWARegistration(
   isRegistered = true;
 
   try {
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker?.register) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })?.then?.((reg) => {
+        if (reg?.active || reg?.installing?.state === 'installed') {
+          window.dispatchEvent(new CustomEvent('offline-ready'));
+        }
+        reg?.addEventListener?.('updatefound', () => {
+          const installing = reg.installing;
+          if (installing) {
+            installing.addEventListener('statechange', () => {
+              if (installing.state === 'installed' || installing.state === 'activated') {
+                window.dispatchEvent(new CustomEvent('offline-ready'));
+              }
+            });
+          }
+        });
+      })?.catch?.(() => {});
+    }
+
     return registerSW({
       immediate: options.immediate ?? true,
       onOfflineReady() {
@@ -80,6 +98,17 @@ export function bindOfflineStatus(rootElement: HTMLElement): () => void {
   // Determine initial state
   const initialState = getInitialOfflineState();
   updateStatus(initialState);
+
+  if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener?.('controllerchange', () => {
+      updateStatus('ready');
+    });
+    if (navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then?.(() => {
+        updateStatus('ready');
+      }).catch?.(() => {});
+    }
+  }
 
   const handleOfflineReady = () => {
     updateStatus('ready');

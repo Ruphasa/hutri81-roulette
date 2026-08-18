@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mountRaffleApp, type ControllerDependencies } from './raffle-controller';
 import type { EventConfig } from '../domain/types';
-import type { RaffleState } from '../domain/types';
 
 describe('Raffle Controller User Behavior', () => {
   let root: HTMLElement;
@@ -87,8 +86,7 @@ describe('Raffle Controller User Behavior', () => {
   });
 
   it('repeated click and Enter while spinning select nothing extra', async () => {
-    let resolveAnimation: () => void;
-    deps = { ...deps, animateRoulette: vi.fn().mockReturnValue(new Promise(r => resolveAnimation = r as any)) };
+    deps = { ...deps, animateRoulette: vi.fn().mockReturnValue(new Promise(() => {})) };
     
     unmount = mountRaffleApp(root, deps);
     const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
@@ -106,8 +104,7 @@ describe('Raffle Controller User Behavior', () => {
   });
 
   it('draw selection persists the spinning state before animation begins', async () => {
-    let resolveAnimation: () => void;
-    deps = { ...deps, animateRoulette: vi.fn().mockReturnValue(new Promise(r => resolveAnimation = r as any)) };
+    deps = { ...deps, animateRoulette: vi.fn().mockReturnValue(new Promise(() => {})) };
     
     unmount = mountRaffleApp(root, deps);
     const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
@@ -217,5 +214,43 @@ describe('Raffle Controller User Behavior', () => {
     await Promise.resolve();
 
     expect(advanceBtn.textContent).toBe('Lihat Semua Pemenang');
+  });
+
+  it('default animateRoulette triggers anime.js motion and updates wheel and winner readout', async () => {
+    // Mount without custom animateRoulette mock to exercise default anime.js integration
+    const customDeps: ControllerDependencies = {
+      config: mockConfig,
+      selectWinner: vi.fn().mockReturnValue('A1'),
+      storage: deps.storage,
+      now: vi.fn().mockReturnValue('2026-08-18T10:00:00Z'),
+      reducedMotion: vi.fn().mockReturnValue(true) // quick completion
+    };
+
+    unmount = mountRaffleApp(root, customDeps);
+    const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
+    
+    drawBtn.click();
+    
+    // Allow reduced motion timeout
+    await new Promise(r => setTimeout(r, 100));
+
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
+    const centerValue = root.querySelector('[data-role="center-value"]') as HTMLElement;
+    expect(centerValue.textContent).toBe('A1');
+  });
+
+  it('reset confirms and clears anime styling on wheel and winner display', async () => {
+    unmount = mountRaffleApp(root, deps);
+    const resetBtn = root.querySelector('[data-role="reset"]') as HTMLButtonElement;
+    const confirmBtn = root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement;
+    const wheel = root.querySelector('[data-role="wheel"]') as HTMLElement;
+    
+    wheel.style.transform = 'rotate(1440deg)';
+    
+    resetBtn.click();
+    confirmBtn.click();
+    
+    expect(wheel.style.transform).toBe('rotate(0deg)');
+    expect(root.getAttribute('data-phase')).toBe('IDLE');
   });
 });

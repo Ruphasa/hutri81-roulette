@@ -1,43 +1,44 @@
+import anime from 'animejs';
 import { createInitialState, transition } from '../domain/raffle-machine';
 import { generateLots } from '../domain/lot-generation';
 import { loadRaffleState, saveRaffleState, clearRaffleState } from '../lib/persistence';
 import type { EventConfig, RaffleState } from '../domain/types';
-
+import { EVENT_CONFIG } from '../config/event';
 import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
 import { animateRoulette as defaultAnimateRoulette } from './roulette-motion';
 
 export interface ControllerDependencies {
-  readonly config: EventConfig;
-  readonly selectWinner?: (activeLots: readonly string[]) => string;
-  readonly animateRoulette?: (options: any) => Promise<void>;
-  readonly storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
-  readonly now?: () => string;
-  readonly reducedMotion?: () => boolean;
+  readonly config?: EventConfig | undefined;
+  readonly selectWinner?: ((activeLots: readonly string[]) => string) | undefined;
+  readonly animateRoulette?: ((options: any) => Promise<void>) | undefined;
+  readonly storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | undefined;
+  readonly now?: (() => string) | undefined;
+  readonly reducedMotion?: (() => boolean) | undefined;
 }
 
-export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDependencies> & { config: EventConfig }): () => void {
-  if (!deps?.config) throw new Error('config is required');
-  const config = deps.config;
-  const selectWinner = deps.selectWinner || defaultSelectWinner;
-  const animateRoulette = deps.animateRoulette || defaultAnimateRoulette;
-  const storage = deps.storage || window.localStorage;
-  const now = deps.now || (() => new Date().toISOString());
-  const reducedMotion = deps.reducedMotion || (() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let currentRotation = 0;
 
-  
+export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies | undefined): () => void {
+  const config = deps?.config || EVENT_CONFIG;
+  const selectWinner = deps?.selectWinner || defaultSelectWinner;
+  const animateRoulette = deps?.animateRoulette || defaultAnimateRoulette;
+  const storage = deps?.storage || window.localStorage;
+  const now = deps?.now || (() => new Date().toISOString());
+  const reducedMotion = deps?.reducedMotion || (() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
   const els = {
-    wheel: root.querySelector('[data-role="wheel"]') as HTMLElement,
-    centerValue: root.querySelector('[data-role="center-value"]') as HTMLElement,
-    activeCount: root.querySelector('[data-role="active-count"]') as HTMLElement,
-    prizePosition: root.querySelector('[data-role="prize-position"]') as HTMLElement,
-    drawBtn: root.querySelector('[data-role="draw"]') as HTMLButtonElement,
-    advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement,
-    resetBtn: root.querySelector('[data-role="reset"]') as HTMLButtonElement,
-    resetDialog: root.querySelector('[data-role="reset-dialog"]') as HTMLDialogElement,
-    resetCancelBtn: root.querySelector('[data-role="reset-cancel"]') as HTMLButtonElement,
-    resetConfirmBtn: root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement,
-    winnerHistory: root.querySelector('[data-role="winner-history"]') as HTMLElement,
-    errorPanel: root.querySelector('[data-role="error"]') as HTMLElement,
+    wheel: (root.querySelector('[data-role="wheel"]') || root.querySelector('.wheel-svg')) as HTMLElement | null,
+    centerValue: (root.querySelector('[data-role="winner-display"]') || root.querySelector('[data-role="center-value"]')) as HTMLElement | null,
+    activeCount: root.querySelector('[data-role="active-count"]') as HTMLElement | null,
+    prizePosition: root.querySelector('[data-role="prize-position"]') as HTMLElement | null,
+    drawBtn: (root.querySelector('[data-role="spin-button"]') || root.querySelector('[data-role="draw"]')) as HTMLButtonElement | null,
+    advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement | null,
+    resetBtn: (root.querySelector('[data-role="reset-button"]') || root.querySelector('[data-role="reset"]')) as HTMLButtonElement | null,
+    resetDialog: root.querySelector('[data-role="reset-dialog"]') as HTMLDialogElement | null,
+    resetCancelBtn: root.querySelector('[data-role="reset-cancel"]') as HTMLButtonElement | null,
+    resetConfirmBtn: root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement | null,
+    winnerHistory: root.querySelector('[data-role="winner-history"]') as HTMLElement | null,
+    errorPanel: root.querySelector('[data-role="error"]') as HTMLElement | null,
   };
 
   const fullPool = generateLots(config.lotRanges);
@@ -72,51 +73,87 @@ export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDepen
     
     // Error state
     if (currentUiPhase === 'ERROR') {
-      els.errorPanel.textContent = errorMessage;
-      els.errorPanel.hidden = false;
-      els.drawBtn.disabled = true;
-      els.advanceBtn.disabled = true;
-      els.resetBtn.disabled = true;
+      if (els.errorPanel) {
+        els.errorPanel.textContent = errorMessage;
+        els.errorPanel.hidden = false;
+      }
+      if (els.drawBtn) els.drawBtn.disabled = true;
+      if (els.advanceBtn) els.advanceBtn.disabled = true;
+      if (els.resetBtn) els.resetBtn.disabled = true;
       return;
     } else {
-      els.errorPanel.hidden = true;
-      els.errorPanel.textContent = '';
+      if (els.errorPanel) {
+        els.errorPanel.hidden = true;
+        els.errorPanel.textContent = '';
+      }
     }
 
     // Active count
-    els.activeCount.textContent = state.activeLots.length.toString();
+    if (els.activeCount) {
+      els.activeCount.textContent = state.activeLots.length.toString();
+    }
 
     // Prize Position
-    if (state.prizeIndex < config.prizes.length) {
+    if (els.prizePosition && state.prizeIndex < config.prizes.length) {
       const p = config.prizes[state.prizeIndex];
       els.prizePosition.textContent = p?.label || '';
     }
 
     // Buttons
-    els.drawBtn.disabled = currentUiPhase !== 'IDLE';
-    els.advanceBtn.disabled = currentUiPhase !== 'REVEAL_WINNER';
-    els.resetBtn.disabled = currentUiPhase === 'SPINNING';
+    if (els.drawBtn) {
+      if (els.advanceBtn) {
+        els.drawBtn.disabled = currentUiPhase !== 'IDLE';
+        els.drawBtn.hidden = currentUiPhase === 'REVEAL_WINNER' || currentUiPhase === 'COMPLETE';
+      } else {
+        if (currentUiPhase === 'IDLE') {
+          els.drawBtn.textContent = 'PUTAR SEKARANG';
+          els.drawBtn.disabled = false;
+          els.drawBtn.hidden = false;
+        } else if (currentUiPhase === 'SPINNING') {
+          els.drawBtn.textContent = 'MEMUTAR...';
+          els.drawBtn.disabled = true;
+          els.drawBtn.hidden = false;
+        } else if (currentUiPhase === 'REVEAL_WINNER') {
+          els.drawBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'LIHAT SEMUA PEMENANG' : 'LANJUT HADIAH';
+          els.drawBtn.disabled = false;
+          els.drawBtn.hidden = false;
+        } else if (currentUiPhase === 'COMPLETE') {
+          els.drawBtn.textContent = 'SEMUA PEMENANG SELESAI';
+          els.drawBtn.disabled = true;
+          els.drawBtn.hidden = false;
+        }
+      }
+    }
 
-    // Button visibility
-    els.advanceBtn.hidden = currentUiPhase !== 'REVEAL_WINNER' && currentUiPhase !== 'COMPLETE';
-    els.drawBtn.hidden = currentUiPhase === 'REVEAL_WINNER' || currentUiPhase === 'COMPLETE';
+    if (els.advanceBtn) {
+      els.advanceBtn.disabled = currentUiPhase !== 'REVEAL_WINNER';
+      els.advanceBtn.hidden = currentUiPhase !== 'REVEAL_WINNER' && currentUiPhase !== 'COMPLETE';
+      els.advanceBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'Lihat Semua Pemenang' : 'Lanjut Hadiah Berikutnya';
+    }
 
-    // Advance button text
-    els.advanceBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'Lihat Semua Pemenang' : 'Lanjut Hadiah Berikutnya';
+    if (els.resetBtn) {
+      els.resetBtn.disabled = currentUiPhase === 'SPINNING';
+    }
 
     // Winner readout
-    if (currentUiPhase === 'REVEAL_WINNER' && state.winners.length > 0) {
-      els.centerValue.textContent = state.winners[state.winners.length - 1]?.lotId || '';
-    } else if (currentUiPhase === 'IDLE' || currentUiPhase === 'COMPLETE') {
-      els.centerValue.textContent = '';
+    if (els.centerValue) {
+      if (currentUiPhase === 'REVEAL_WINNER' && state.winners.length > 0) {
+        els.centerValue.textContent = state.winners[state.winners.length - 1]?.lotId || '';
+      } else if (currentUiPhase === 'IDLE' || currentUiPhase === 'COMPLETE') {
+        if (state.winners.length === 0) {
+          els.centerValue.textContent = els.centerValue.getAttribute('data-role') === 'center-value' ? '' : '???';
+        }
+      }
     }
     
     // History
-    els.winnerHistory.replaceChildren();
-    for (const w of [...state.winners].reverse()) {
-      const d = document.createElement('div');
-      d.textContent = `${w.lotId} - ${w.prizeLabel}`;
-      els.winnerHistory.appendChild(d);
+    if (els.winnerHistory) {
+      els.winnerHistory.replaceChildren();
+      for (const w of [...state.winners].reverse()) {
+        const d = document.createElement('div');
+        d.textContent = `${w.lotId} - ${w.prizeLabel}`;
+        els.winnerHistory.appendChild(d);
+      }
     }
   }
 
@@ -147,6 +184,20 @@ export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDepen
     }
 
     if (!saveAndRender()) return;
+
+    if (els.wheel && !deps?.animateRoulette) {
+      anime({
+        targets: els.wheel,
+        rotate: currentRotation + 1080 + Math.random() * 360,
+        duration: 5000,
+        easing: 'easeInQuad',
+        update: function(anim) {
+          if (anim.animations[0]?.currentValue) {
+            currentRotation = parseFloat(anim.animations[0].currentValue as string);
+          }
+        }
+      });
+    }
 
     await animateRoulette({
       wheel: els.wheel,
@@ -180,24 +231,50 @@ export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDepen
     }
   }
 
+  async function handleMainClick() {
+    if (currentUiPhase === 'IDLE') {
+      await handleDraw();
+    } else if (currentUiPhase === 'REVEAL_WINNER' && !els.advanceBtn) {
+      handleAdvance();
+    }
+  }
+
   function handleResetClick() {
-    els.resetDialog.showModal();
+    if (els.resetDialog && typeof els.resetDialog.showModal === 'function') {
+      els.resetDialog.showModal();
+    } else {
+      handleResetConfirm();
+    }
   }
 
   function handleResetCancel() {
-    els.resetDialog.close();
+    if (els.resetDialog && typeof els.resetDialog.close === 'function') {
+      els.resetDialog.close();
+    }
   }
 
   function handleResetConfirm() {
-    els.resetDialog.close();
+    if (els.resetDialog && typeof els.resetDialog.close === 'function') {
+      els.resetDialog.close();
+    }
     clearRaffleState(storage);
     state = createInitialState(config, fullPool);
     currentUiPhase = 'IDLE';
+    if (els.wheel) {
+      anime.remove(els.wheel);
+      els.wheel.style.transform = 'rotate(0deg)';
+    }
+    if (els.centerValue) {
+      anime.remove(els.centerValue);
+      els.centerValue.style.transform = '';
+      els.centerValue.style.opacity = '';
+    }
+    currentRotation = 0;
     render();
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (els.resetDialog.open) return;
+    if (els.resetDialog && els.resetDialog.open) return;
     if (e.key === 'Enter') {
       if (currentUiPhase === 'IDLE') {
         handleDraw();
@@ -207,22 +284,50 @@ export function mountRaffleApp(root: HTMLElement, deps?: Partial<ControllerDepen
     }
   }
 
-  els.drawBtn.addEventListener('click', handleDraw);
-  els.advanceBtn.addEventListener('click', handleAdvance);
-  els.resetBtn.addEventListener('click', handleResetClick);
-  els.resetCancelBtn.addEventListener('click', handleResetCancel);
-  els.resetConfirmBtn.addEventListener('click', handleResetConfirm);
+  if (els.drawBtn) {
+    if (els.advanceBtn) {
+      els.drawBtn.addEventListener('click', handleDraw);
+      els.advanceBtn.addEventListener('click', handleAdvance);
+    } else {
+      els.drawBtn.addEventListener('click', handleMainClick);
+    }
+  }
+  if (els.resetBtn) els.resetBtn.addEventListener('click', handleResetClick);
+  if (els.resetCancelBtn) els.resetCancelBtn.addEventListener('click', handleResetCancel);
+  if (els.resetConfirmBtn) els.resetConfirmBtn.addEventListener('click', handleResetConfirm);
   document.addEventListener('keydown', handleKeyDown);
 
   updatePhase();
   render();
 
   return () => {
-    els.drawBtn.removeEventListener('click', handleDraw);
-    els.advanceBtn.removeEventListener('click', handleAdvance);
-    els.resetBtn.removeEventListener('click', handleResetClick);
-    els.resetCancelBtn.removeEventListener('click', handleResetCancel);
-    els.resetConfirmBtn.removeEventListener('click', handleResetConfirm);
+    if (els.drawBtn) {
+      if (els.advanceBtn) {
+        els.drawBtn.removeEventListener('click', handleDraw);
+        els.advanceBtn.removeEventListener('click', handleAdvance);
+      } else {
+        els.drawBtn.removeEventListener('click', handleMainClick);
+      }
+    }
+    if (els.resetBtn) els.resetBtn.removeEventListener('click', handleResetClick);
+    if (els.resetCancelBtn) els.resetCancelBtn.removeEventListener('click', handleResetCancel);
+    if (els.resetConfirmBtn) els.resetConfirmBtn.removeEventListener('click', handleResetConfirm);
     document.removeEventListener('keydown', handleKeyDown);
   };
 }
+
+if (typeof window !== 'undefined') {
+  const init = () => {
+    const root = document.querySelector<HTMLElement>('[data-raffle-app]') || document.querySelector<HTMLElement>('[data-role="stage"]');
+    if (root && !(root as any).__raffleMounted) {
+      (root as any).__raffleMounted = true;
+      mountRaffleApp(root, { config: EVENT_CONFIG });
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}
+

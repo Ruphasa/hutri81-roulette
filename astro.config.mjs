@@ -11,7 +11,7 @@ export default defineConfig({
         name: 'Undian HUT RI 81 — Griya Shanta RT 08',
         short_name: 'Undian RT 08',
         description: 'Undian kavling offline untuk malam HUT RI ke-81.',
-        start_url: '/draw/',
+        start_url: '/',
         scope: '/',
         display: 'standalone',
         background_color: '#09080d',
@@ -24,7 +24,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{html,js,css,svg,png,woff2,webmanifest}'],
-        navigateFallback: '/draw/index.html'
+        navigateFallback: '/index.html',
+        clientsClaim: true,
+        skipWaiting: true
       }
     })
   ]

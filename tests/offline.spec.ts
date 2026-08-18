@@ -22,7 +22,7 @@ test.describe('Offline capabilities', () => {
     // Set offline
     await context.setOffline(true);
     
-    await page.goto('/draw/', { waitUntil: 'commit' });
+    await page.goto('/', { waitUntil: 'commit' });
     
     // Perform a draw
     await page.locator('[data-role="draw"]').click();

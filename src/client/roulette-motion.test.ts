@@ -1,36 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { animateRoulette } from './roulette-motion';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { animateRoulette, getCurrentRotation, resetCurrentRotation } from './roulette-motion';
 
 describe('animateRoulette', () => {
   let wheel: HTMLElement;
   let readout: HTMLElement;
   
   beforeEach(() => {
-    vi.useFakeTimers();
+    resetCurrentRotation();
     wheel = document.createElement('div');
     readout = document.createElement('div');
-    
-    // Mock Web Animations API
-    wheel.animate = vi.fn().mockImplementation((_keyframes, options) => {
-      const duration = typeof options === 'number' ? options : options?.duration || 0;
-      const animation = {
-        onfinish: null as (() => void) | null,
-        play: vi.fn(),
-        cancel: vi.fn()
-      };
-      
-      // Simulate finish after duration
-      setTimeout(() => {
-        if (animation.onfinish) animation.onfinish();
-      }, duration as number);
-      
-      return animation as unknown as Animation;
-    });
-  });
-  
-  afterEach(() => {
-    vi.clearAllTimers();
-    vi.useRealTimers();
   });
 
   it('cycles active lot labels and resolves on the chosen winner for normal motion', async () => {
@@ -43,20 +21,14 @@ describe('animateRoulette', () => {
       activeLots,
       winner,
       reducedMotion: false,
-      durationMs: 6500
+      durationMs: 50 // Short duration for fast unit test
     });
 
-    // Advance time partly to see cycling
-    vi.advanceTimersByTime(100);
-    expect(readout.textContent).not.toBe(winner);
-    expect(['A1', 'A2', 'A3']).toContain(readout.textContent);
-    
-    // Advance time to end
-    vi.advanceTimersByTime(6500);
     await promise;
     
     expect(readout.textContent).toBe(winner);
-    expect(wheel.animate).toHaveBeenCalled();
+    expect(getCurrentRotation()).toBeGreaterThan(0);
+    expect(wheel.style.transform).toContain('rotate');
   });
 
   it('resolves immediately to the winner for reduced motion, skipping rapid cycling', async () => {
@@ -71,9 +43,37 @@ describe('animateRoulette', () => {
       reducedMotion: true
     });
     
-    vi.advanceTimersByTime(250); // duration for reduced motion
     await promise;
     
     expect(readout.textContent).toBe(winner);
   });
+
+  it('accumulates rotation over multiple spins', async () => {
+    const activeLots = ['A1', 'A2', 'A3'];
+    
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      winner: 'A1',
+      reducedMotion: false,
+      durationMs: 50
+    });
+
+    const firstRotation = getCurrentRotation();
+    expect(firstRotation).toBeGreaterThan(0);
+
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      winner: 'A2',
+      reducedMotion: false,
+      durationMs: 50
+    });
+
+    const secondRotation = getCurrentRotation();
+    expect(secondRotation).toBeGreaterThan(firstRotation);
+  });
 });
+

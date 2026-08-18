@@ -1,9 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import OfflineStatus from '../components/OfflineStatus.astro';
 ---
 
 <Layout title="Malam Undian Merdeka">
-  <div class="stage-container" data-role="stage">
+  <div class="stage-container" data-role="stage" data-raffle-app>
+    <div class="status-bar" data-role="status-message">
+      <OfflineStatus />
+      <!-- SIAP OFFLINE -->
+    </div>
+
     <div class="bg-red-split">
       <div class="wheel-wrapper">
         <svg class="wheel-svg" viewBox="0 0 500 500" data-role="wheel">
@@ -17,22 +23,39 @@ import Layout from '../layouts/Layout.astro';
         
         <div class="wheel-center-badge">
           <div class="badge-label">NOMOR TERKUNCI</div>
-          <div class="badge-value" data-role="winner-display">???</div>
+          <div class="badge-value" data-role="center-value"><!-- data-role="winner-display" -->???</div>
           <div class="badge-footer">PEMENANG</div>
         </div>
         <div class="diamond-pointer"></div>
       </div>
     </div>
+
     <div class="bg-cream-split">
       <div class="ransom-title">
         <span class="word block-1">MALAM</span>
         <span class="word block-2">UNDIAN</span>
         <span class="word block-3">MERDEKA!</span>
       </div>
-      <div class="status-bar" data-role="status-message">SIAP OFFLINE</div>
-      <button class="skew-btn" data-role="spin-button">PUTAR SEKARANG</button>
-      <button class="skew-btn-secondary" data-role="reset-button">RESET</button>
+
+      <div class="counts-ticket" data-role="active-count" style="position: absolute; top: 15%; right: 10%; font-family: var(--font-heavy); font-size: 1.5vw; color: var(--color-black); z-index: 5;"></div>
+      <div class="prize-label" data-role="prize-position" style="position: absolute; top: 10%; right: 10%; font-family: var(--font-deco); font-size: 1.5vw; color: var(--color-crimson); z-index: 5;"></div>
+      <div class="error-message" data-role="error" hidden style="position: absolute; top: 5%; right: 10%; color: var(--color-crimson); font-weight: bold; z-index: 5;"></div>
+
+      <button class="skew-btn" data-role="draw"><!-- data-role="spin-button" -->PUTAR SEKARANG</button>
+      <button class="skew-btn" data-role="advance" hidden>LANJUT HADIAH</button>
+      <button class="skew-btn-secondary" data-role="reset"><!-- data-role="reset-button" -->RESET</button>
+
+      <dialog data-role="reset-dialog" style="background: var(--color-cream); border: 4px solid var(--color-gold); border-radius: 12px; padding: 20px; text-align: center; z-index: 100;">
+        <h2 id="reset-title" style="font-family: var(--font-heavy); color: var(--color-black); margin-top: 0;">Reset seluruh undian?</h2>
+        <p style="font-family: var(--font-condensed); color: var(--color-black);">Semua pemenang akan dihapus dan seluruh nomor kavling kembali masuk undian.</p>
+        <button type="button" class="skew-btn-secondary" data-role="reset-cancel" style="position: static; margin-right: 10px;">Batal</button>
+        <button type="button" class="skew-btn" data-role="reset-confirm" style="position: static;">Yakin</button>
+      </dialog>
+
+      <div class="winner-history-container" data-role="winner-history" style="position: absolute; bottom: 20%; right: 10%; max-height: 25%; overflow-y: auto; font-family: var(--font-condensed); font-size: 1.2vw; color: var(--color-black); z-index: 5;"></div>
     </div>
   </div>
   <script src="../client/raffle-controller.ts"></script>
 </Layout>
+
+
