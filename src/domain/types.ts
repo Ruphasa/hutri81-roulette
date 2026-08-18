@@ -34,3 +34,13 @@ export interface RaffleState {
   readonly prizeIndex: number;
   readonly pendingWinner: WinnerRecord | null;
 }
+
+export type RaffleAction =
+  | {
+      readonly type: 'START_DRAW';
+      readonly lotId: string;
+      readonly drawnAt: string;
+    }
+  | { readonly type: 'REVEAL_WINNER' }
+  | { readonly type: 'ADVANCE' }
+  | { readonly type: 'RESET'; readonly fullPool: readonly string[] };
