@@ -52,3 +52,23 @@ import '../styles/raffle.css';
     min-height: 1.5em;
   }
 </style>
+
+<script>
+  import { mountRaffleApp } from '../client/raffle-controller';
+  import { EVENT_CONFIG } from '../config/event';
+  import { selectWinner } from '../domain/random-selection';
+  import { animateRoulette } from '../client/roulette-motion';
+
+  const root = document.querySelector<HTMLElement>('[data-raffle-app]');
+  if (root) {
+    mountRaffleApp(root, {
+      config: EVENT_CONFIG,
+      selectWinner,
+      animateRoulette,
+      storage: window.localStorage,
+      now: () => new Date().toISOString(),
+      reducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    });
+  }
+</script>
+
