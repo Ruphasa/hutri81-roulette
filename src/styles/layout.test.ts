@@ -34,10 +34,69 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(20%\s+0,\s*100%\s+0,\s*100%\s+100%,\s*0\s+100%\);/);
   });
 
+  it('configures ransom note typography and skewed blocks in global.css', () => {
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+    expect(css).toContain('.ransom-title');
+    expect(css).toMatch(/\.ransom-title\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.ransom-title\s+\.word\s*\{[\s\S]*font-family:\s*var\(--font-heavy\);/);
+    expect(css).toContain('.block-1');
+    expect(css).toContain('.block-2');
+    expect(css).toContain('.block-3');
+  });
+
+  it('configures wheel wrapper, SVG wheel, center badge, and diamond pointer in global.css', () => {
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+    expect(css).toContain('.wheel-wrapper');
+    expect(css).toContain('.wheel-svg');
+    expect(css).toContain('.wheel-center-badge');
+    expect(css).toContain('.badge-label');
+    expect(css).toContain('.badge-value');
+    expect(css).toContain('.badge-footer');
+    expect(css).toContain('.diamond-pointer');
+  });
+
+  it('configures skewed control buttons and status bar in global.css', () => {
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+    expect(css).toContain('.skew-btn');
+    expect(css).toContain('.skew-btn-secondary');
+    expect(css).toContain('.status-bar');
+  });
+
   it('includes diagonal split elements inside .stage-container in index.astro', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
     expect(astro).toContain('class="stage-container"');
-    expect(astro).toContain('<div class="bg-red-split"></div>');
-    expect(astro).toContain('<div class="bg-cream-split"></div>');
+    expect(astro).toContain('class="bg-red-split"');
+    expect(astro).toContain('class="bg-cream-split"');
+  });
+
+  it('includes ransom note header in index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    expect(astro).toContain('class="ransom-title"');
+    expect(astro).toContain('MALAM');
+    expect(astro).toContain('UNDIAN');
+    expect(astro).toContain('MERDEKA!');
+    expect(astro).toContain('class="word block-1"');
+    expect(astro).toContain('class="word block-2"');
+    expect(astro).toContain('class="word block-3"');
+  });
+
+  it('includes SVG roulette wheel structure, winner badge, and pointer in index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    expect(astro).toContain('class="wheel-wrapper"');
+    expect(astro).toContain('data-role="wheel"');
+    expect(astro).toContain('viewBox="0 0 500 500"');
+    expect(astro).toContain('class="wheel-center-badge"');
+    expect(astro).toContain('data-role="winner-display"');
+    expect(astro).toContain('class="diamond-pointer"');
+  });
+
+  it('includes control buttons and status bar with expected data-role attributes in index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    expect(astro).toContain('data-role="status-message"');
+    expect(astro).toContain('data-role="spin-button"');
+    expect(astro).toContain('data-role="reset-button"');
+    expect(astro).toContain('PUTAR SEKARANG');
+    expect(astro).toContain('RESET');
+    expect(astro).toContain('SIAP OFFLINE');
   });
 });

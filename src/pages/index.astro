@@ -4,8 +4,35 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="Malam Undian Merdeka">
   <div class="stage-container" data-role="stage">
-    <div class="bg-red-split"></div>
-    <div class="bg-cream-split"></div>
+    <div class="bg-red-split">
+      <div class="wheel-wrapper">
+        <svg class="wheel-svg" viewBox="0 0 500 500" data-role="wheel">
+          <circle cx="250" cy="250" r="240" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="10"/>
+          <!-- Outer ring Deco layer -->
+          <path d="M 250 10 A 240 240 0 0 1 490 250 L 250 250 Z" fill="var(--color-crimson)"/>
+          <path d="M 490 250 A 240 240 0 0 1 250 490 L 250 250 Z" fill="#117964"/>
+          <path d="M 250 490 A 240 240 0 0 1 10 250 L 250 250 Z" fill="var(--color-gold)"/>
+          <path d="M 10 250 A 240 240 0 0 1 250 10 L 250 250 Z" fill="var(--color-black)"/>
+        </svg>
+        
+        <div class="wheel-center-badge">
+          <div class="badge-label">NOMOR TERKUNCI</div>
+          <div class="badge-value" data-role="winner-display">???</div>
+          <div class="badge-footer">PEMENANG</div>
+        </div>
+        <div class="diamond-pointer"></div>
+      </div>
+    </div>
+    <div class="bg-cream-split">
+      <div class="ransom-title">
+        <span class="word block-1">MALAM</span>
+        <span class="word block-2">UNDIAN</span>
+        <span class="word block-3">MERDEKA!</span>
+      </div>
+      <div class="status-bar" data-role="status-message">SIAP OFFLINE</div>
+      <button class="skew-btn" data-role="spin-button">PUTAR SEKARANG</button>
+      <button class="skew-btn-secondary" data-role="reset-button">RESET</button>
+    </div>
   </div>
   <script src="../client/raffle-controller.ts"></script>
 </Layout>
