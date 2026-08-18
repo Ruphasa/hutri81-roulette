@@ -11,7 +11,7 @@ export const EVENT_CONFIG: EventConfig = {
     { prefix: 'L-', start: 201, end: 240 },
     { prefix: 'L-', start: 242, end: 257 },
     { prefix: 'K-', start: 333, end: 412 },
-    { prefix: '?-', start: 301, end: 315 }, // Belum konfirmasi K atau L
+    { prefix: 'L-', start: 301, end: 315 },
   ],
   prizes: [
     { id: 'hadiah-1', label: 'Hadiah ke-1' },
