@@ -4,6 +4,7 @@ export interface RouletteMotionOptions {
   readonly wheel?: HTMLElement | null;
   readonly readout?: HTMLElement | null;
   readonly activeLots: readonly string[];
+  readonly fullPool?: readonly string[];
   readonly winner: string;
   readonly reducedMotion: boolean;
   readonly durationMs?: number;
@@ -20,8 +21,9 @@ export function resetCurrentRotation(): void {
 }
 
 export async function animateRoulette(options: RouletteMotionOptions): Promise<void> {
-  const { wheel, readout, activeLots, winner, reducedMotion, durationMs = 4000 } = options;
+  const { wheel, readout, activeLots, fullPool, winner, reducedMotion, durationMs = 4000 } = options;
   const duration = reducedMotion ? 50 : durationMs;
+  const pool = fullPool && fullPool.length > 0 ? fullPool : activeLots;
 
   try {
     if (reducedMotion) {
@@ -35,25 +37,25 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         anime.remove(wheel);
         // 1. "init" - start exactly from the currently displayed text
         const startLot = readout?.textContent?.trim() || '';
-        let startIndex = activeLots.indexOf(startLot);
+        let startIndex = pool.indexOf(startLot);
         if (startIndex === -1) {
           // If no previous winner, pick a random start
-          startIndex = Math.floor(Math.random() * activeLots.length);
+          startIndex = Math.floor(Math.random() * pool.length);
         }
         
-        const winnerIndex = activeLots.indexOf(winner);
+        const winnerIndex = pool.indexOf(winner);
         const effectiveWinnerIndex = winnerIndex >= 0 ? winnerIndex : 0;
         
         // Calculate the exact distance in the array from start to winner
-        let distance = (effectiveWinnerIndex - startIndex + activeLots.length) % activeLots.length;
+        let distance = (effectiveWinnerIndex - startIndex + pool.length) % pool.length;
         
         // 2. "interval" - We want the wheel to spin at least 50 ticks (2250 degrees)
         // so we add full revolutions of the array until it's a long enough spin.
         let totalTicks = distance;
         const MIN_TICKS = 50;
-        if (activeLots.length > 0) {
+        if (pool.length > 0) {
           while (totalTicks < MIN_TICKS) {
-            totalTicks += activeLots.length;
+            totalTicks += pool.length;
           }
         }
         
@@ -72,9 +74,9 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         // easeOutElastic can overshoot by ~15-20%, so we generate up to totalTicks * 1.5
         const maxTick = Math.ceil(totalTicks * 1.5) + 50;
         for (let i = 0; i <= maxTick; i++) {
-          if (activeLots.length > 0) {
-            const currentIndex = (startIndex + i) % activeLots.length;
-            sequence.push(activeLots[currentIndex] ?? winner);
+          if (pool.length > 0) {
+            const currentIndex = (startIndex + i) % pool.length;
+            sequence.push(pool[currentIndex] ?? winner);
           } else {
             sequence.push(winner);
           }

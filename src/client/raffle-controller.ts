@@ -200,6 +200,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       wheel: els.wheel,
       readout: els.centerValue,
       activeLots: state.activeLots,
+      fullPool: fullPool,
       winner: winner,
       reducedMotion: reducedMotion()
     });
