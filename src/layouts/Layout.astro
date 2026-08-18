@@ -1,0 +1,15 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+  bodyClass?: string | undefined;
+}
+
+const { title = 'Malam Undian Merdeka', description = 'Undian Offline HUT RI - PWA', bodyClass } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} bodyClass={bodyClass}>
+  <slot />
+</BaseLayout>

@@ -7,11 +7,11 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
-  description: string;
-  bodyClass?: string;
+  description?: string | undefined;
+  bodyClass?: string | undefined;
 }
 
-const { title, description, bodyClass } = Astro.props;
+const { title, description = 'Undian Offline HUT RI - PWA', bodyClass } = Astro.props;
 ---
 
 <!doctype html>
