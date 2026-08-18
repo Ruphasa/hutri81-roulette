@@ -75,5 +75,19 @@ describe('animateRoulette', () => {
     const secondRotation = getCurrentRotation();
     expect(secondRotation).toBeGreaterThan(firstRotation);
   });
+
+  it('handles empty activeLots gracefully without throwing', async () => {
+    const winner = 'A99';
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots: [],
+      winner,
+      reducedMotion: false,
+      durationMs: 50
+    });
+
+    expect(readout.textContent).toBe(winner);
+  });
 });
 
