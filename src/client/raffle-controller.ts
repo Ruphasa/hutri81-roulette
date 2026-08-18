@@ -112,7 +112,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
           els.drawBtn.disabled = true;
           els.drawBtn.hidden = false;
         } else if (currentUiPhase === 'REVEAL_WINNER') {
-          els.drawBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'LIHAT SEMUA PEMENANG' : 'LANJUT HADIAH';
+          els.drawBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'LIHAT SEMUA PEMENANG' : 'LANJUT & PUTAR';
           els.drawBtn.disabled = false;
           els.drawBtn.hidden = false;
         } else if (currentUiPhase === 'COMPLETE') {
@@ -220,6 +220,9 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       await handleDraw();
     } else if (currentUiPhase === 'REVEAL_WINNER' && !els.advanceBtn) {
       handleAdvance();
+      if (currentUiPhase === 'IDLE') {
+        await handleDraw();
+      }
     }
   }
 

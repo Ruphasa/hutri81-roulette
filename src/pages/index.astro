@@ -11,10 +11,7 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     <div class="top-left-badge">GRIYA SHANTA &middot; RT 08</div>
     <div class="top-left-diamond"></div>
 
-    <div class="status-bar" data-role="status-message">
-      <OfflineStatus />
-      <!-- SIAP OFFLINE -->
-    </div>
+
 
     <div class="bg-red-split">
       <div class="wheel-wrapper">
@@ -105,7 +102,7 @@ import OfflineStatus from '../components/OfflineStatus.astro';
 
     <div class="ransom-title">
       <span class="word block-1">MALAM</span>
-      <span class="word block-2">UNDIAN</span>
+      <span class="block-2">UNDIAN</span>
       <span class="word block-3">MERDEKA!</span>
     </div>
 
@@ -120,11 +117,12 @@ import OfflineStatus from '../components/OfflineStatus.astro';
         PUTAR SEKARANG
         <span class="btn-arrow" aria-hidden="true">&#9654;</span>
       </button>
-      <button class="skew-btn advance-btn" data-role="advance" hidden>LANJUT HADIAH</button>
       <div class="btn-subtext">ENTER - MULAI UNDIAN</div>
     </div>
 
-    <div class="bottom-right-diamond"></div>
+    <div class="bottom-right-diamond">
+      <OfflineStatus />
+    </div>
 
     <button class="skew-btn-secondary" data-role="reset-button">RESET</button>
 

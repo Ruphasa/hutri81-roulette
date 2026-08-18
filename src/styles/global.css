@@ -195,12 +195,12 @@ body {
 }
 
 .block-2 {
-  background: var(--color-gold);
-  color: var(--color-black);
+  color: var(--color-gold);
+  font-family: var(--font-heavy);
   font-size: 3.2vw;
-  transform: rotate(3deg);
-  margin-left: -1vw;
-  padding: 0.15em 0.7em;
+  margin-top: -6px;
+  margin-bottom: -6px;
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.85);
 }
 
 .block-3 {
