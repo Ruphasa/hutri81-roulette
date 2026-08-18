@@ -278,3 +278,48 @@ describe('stabilizeRestoredState', () => {
     expect(reset).toEqual(initial);
   });
 });
+
+describe('forfeit transition', () => {
+  it('forfeits the current winner and does not increment prizeIndex', () => {
+    const testPrizes = [{ id: '1', label: 'Hadiah 1' }, { id: '2', label: 'Hadiah 2' }];
+    const testConfig: EventConfig = {
+      id: 'test',
+      title: 'Test',
+      neighborhood: 'RT 01',
+      prizes: testPrizes,
+      lotRanges: [],
+    };
+    let state = createInitialState(testConfig, ['A1', 'A2', 'A3']);
+    state = transition(state, { type: 'START_DRAW', lotId: 'A2', drawnAt: '2026-08-18' }, testPrizes);
+    state = transition(state, { type: 'REVEAL_WINNER' }, testPrizes);
+
+    expect(state.phase).toBe('winner');
+    expect(state.winners.length).toBe(1);
+    expect(state.prizeIndex).toBe(0);
+    expect(state.activeLots).not.toContain('A2');
+
+    state = transition(state, { type: 'FORFEIT' }, testPrizes);
+
+    expect(state.phase).toBe('idle');
+    expect(state.winners.length).toBe(0);
+    expect(state.prizeIndex).toBe(0);
+    expect(state.activeLots).not.toContain('A2'); // Permanently discarded
+  });
+
+  it('throws error if FORFEIT is called outside winner phase', () => {
+    const testPrizes = [{ id: '1', label: 'Hadiah 1' }];
+    const testConfig: EventConfig = {
+      id: 'test',
+      title: 'Test',
+      neighborhood: 'RT 01',
+      prizes: testPrizes,
+      lotRanges: [],
+    };
+    const state = createInitialState(testConfig, ['A1']);
+
+    expect(() => transition(state, { type: 'FORFEIT' }, testPrizes)).toThrowError(
+      'Hanya bisa hangus setelah pemenang muncul.',
+    );
+  });
+});
+

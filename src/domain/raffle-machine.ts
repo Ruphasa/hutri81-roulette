@@ -204,6 +204,20 @@ function advance(state: RaffleState, prizes: readonly Prize[]): RaffleState {
   );
 }
 
+function forfeit(state: RaffleState): RaffleState {
+  if (state.phase !== 'winner') {
+    throw new Error('Hanya bisa hangus setelah pemenang muncul.');
+  }
+
+  return freezeState(
+    'idle',
+    state.activeLots,
+    state.winners.slice(0, -1),
+    state.prizeIndex,
+    null,
+  );
+}
+
 function reset(
   state: RaffleState,
   action: Extract<RaffleAction, { readonly type: 'RESET' }>,
@@ -241,6 +255,8 @@ export function transition(
       return revealWinner(state);
     case 'ADVANCE':
       return advance(state, prizes);
+    case 'FORFEIT':
+      return forfeit(state);
     case 'RESET':
       return reset(state, action, prizes);
     default:

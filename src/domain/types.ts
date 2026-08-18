@@ -43,4 +43,6 @@ export type RaffleAction =
     }
   | { readonly type: 'REVEAL_WINNER' }
   | { readonly type: 'ADVANCE' }
+  | { readonly type: 'FORFEIT' }
   | { readonly type: 'RESET'; readonly fullPool: readonly string[] };
+
