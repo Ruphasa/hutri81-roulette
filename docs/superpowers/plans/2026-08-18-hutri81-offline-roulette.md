@@ -92,8 +92,8 @@ This bootstrap is intentionally completed before implementation begins. It publi
 
 - [x] Initialize Git with `main` as the default branch.
 - [x] Commit only `.gitignore`, `README.md`, `PRODUCT.md`, and `docs/superpowers/` as `docs: establish HUT RI roulette project`.
-- [ ] Create the public GitHub repository `hutri81-roulette` and push `main`.
-- [ ] Create the isolated `agent/implement-offline-roulette` worktree used by SDD.
+- [x] Create the public GitHub repository `hutri81-roulette` and push `main`.
+- [x] Create the isolated `agent/implement-offline-roulette` workspace used by SDD (separate Git directory fallback because root Git metadata is sandbox-read-only).
 
 ## Task 1: Establish the Astro/Bun Project and Test Harness
 
@@ -614,7 +614,9 @@ Test:
 
 - draw click selects once and disables draw/reset;
 - repeated click and repeated `Enter` while spinning select nothing extra;
-- animation completion reveals and persists the winner;
+- draw selection persists the spinning state with `pendingWinner` before animation begins;
+- animation completion reveals the winner and persists the stable winner state;
+- persistence write failure blocks animation/advance and shows a recovery error without selecting again;
 - advance changes the prize and returns to idle;
 - reset click opens the dialog without changing state;
 - cancel preserves state;
@@ -638,6 +640,7 @@ interface ControllerDependencies {
 ```
 
 Render by updating text, `hidden`, `disabled`, `aria-busy`, and phase data attributes. Do not rebuild the whole page with `innerHTML`.
+After `START_DRAW`, save the spinning state containing `pendingWinner` before starting animation. After animation completes, reveal the winner and save the stable winner state. If either write fails, stop the transition and render a recoverable error without drawing another lot.
 
 - [ ] **Step 5: Mount the controller from the Astro route**
 
