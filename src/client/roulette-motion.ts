@@ -42,12 +42,26 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         const totalTicks = Math.floor(deltaAngle / 45);
         const sequence: string[] = [];
         
+        const winnerIndex = activeLots.indexOf(winner);
+        const effectiveWinnerIndex = winnerIndex >= 0 ? winnerIndex : 0;
+        
+        // To make it look like a physical wheel, we want the numbers to appear in order.
+        // We need the index at `totalTicks` to be exactly `effectiveWinnerIndex`.
+        // So `startIndex = effectiveWinnerIndex - totalTicks`.
+        // We use modular arithmetic to wrap around `activeLots`.
+        const startIndex = ((effectiveWinnerIndex - (totalTicks % activeLots.length)) % activeLots.length + activeLots.length) % activeLots.length;
+        
         // Build pre-rolled sequence
         for (let i = 0; i <= totalTicks + 20; i++) {
           if (i >= totalTicks) {
             sequence.push(winner);
           } else {
-            sequence.push(activeLots.length > 0 ? (activeLots[Math.floor(Math.random() * activeLots.length)] ?? winner) : winner);
+            if (activeLots.length > 0) {
+              const currentIndex = (startIndex + i) % activeLots.length;
+              sequence.push(activeLots[currentIndex] ?? winner);
+            } else {
+              sequence.push(winner);
+            }
           }
         }
         
