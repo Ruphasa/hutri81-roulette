@@ -430,9 +430,7 @@ body {
 }
 
 .forfeit-btn:hover:not(:disabled) {
-  background: var(--color-crimson);
-  color: var(--color-white);
-  filter: brightness(1.1);
+  filter: brightness(1.2);
   transform: skewX(-12deg) translateY(-2px);
 }
 
