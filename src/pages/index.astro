@@ -1,12 +1,31 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import OfflineStatus from '../components/OfflineStatus.astro';
+import { EVENT_CONFIG } from '../config/event';
+import '../styles/landing.css';
 ---
 
 <BaseLayout
-  title="Undian HUT RI ke-81"
-  description="Undian HUT Republik Indonesia ke-81"
+  title={`Undian - ${EVENT_CONFIG.title}`}
+  description={`Halaman landing untuk undian ${EVENT_CONFIG.title} - ${EVENT_CONFIG.neighborhood}`}
 >
-  <main>
-    <h1>Undian HUT RI ke-81</h1>
-  </main>
+  <div class="landing-page">
+    <OfflineStatus />
+    <main class="hero">
+      <div class="title-block">
+        <h1>{EVENT_CONFIG.title}</h1>
+        <h2>{EVENT_CONFIG.neighborhood}</h2>
+        
+        <div class="fairness-card">
+          <p>Sistem undian ini dirancang untuk bekerja secara offline dan transparan. Semua nomor kavling diacak secara lokal di perangkat Anda.</p>
+        </div>
+
+        <a href="/draw/" class="primary-action">Buka Panggung Undian</a>
+      </div>
+      
+      <div class="preview-box" aria-hidden="true">
+        <div class="preview-content"></div>
+      </div>
+    </main>
+  </div>
 </BaseLayout>

@@ -1,0 +1,208 @@
+.raffle-stage {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  height: 100svh;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  overflow: hidden;
+  font-family: var(--font-ui);
+}
+
+@media (max-aspect-ratio: 16 / 10) {
+  .raffle-stage {
+    min-height: 100svh;
+    grid-template-columns: 1fr;
+    grid-template-rows: 2fr 1fr;
+  }
+}
+
+.stage-left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-ink);
+}
+
+/* Giant left-side roulette */
+.wheel-container {
+  width: 150vmin;
+  height: 150vmin;
+  position: absolute;
+  left: -40vmin;
+  border-radius: 50%;
+  border: 12px solid var(--color-gold);
+  background: conic-gradient(
+    var(--color-ink) 0deg 30deg,
+    var(--color-red) 30deg 60deg,
+    var(--color-jade) 60deg 90deg,
+    var(--color-ink) 90deg 120deg,
+    var(--color-red) 120deg 150deg,
+    var(--color-jade) 150deg 180deg,
+    var(--color-ink) 180deg 210deg,
+    var(--color-red) 210deg 240deg,
+    var(--color-jade) 240deg 270deg,
+    var(--color-ink) 270deg 300deg,
+    var(--color-red) 300deg 330deg,
+    var(--color-jade) 330deg 360deg
+  );
+}
+
+[data-role="wheel"] {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  /* Animation to be handled by JS or CSS classes */
+  transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-role="wheel"] { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+/* Number readout horizontal isolated inside a cream field */
+.center-readout {
+  position: absolute;
+  left: 35vmin;
+  z-index: 10;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  padding: 1rem 3rem;
+  font-family: var(--font-ransom);
+  font-size: 8vmin;
+  border: 4px solid var(--color-gold);
+  box-shadow: 10px 10px 0 var(--color-red);
+  transform: rotate(-2deg);
+}
+
+.stage-right {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+  position: relative;
+  z-index: 5;
+}
+
+@media (max-aspect-ratio: 16 / 10) {
+  .stage-right {
+    clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+.info-block {
+  margin-left: 10%;
+}
+
+.prize-label {
+  font-family: var(--font-ransom);
+  font-size: 3rem;
+  color: var(--color-red);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.operator-controls {
+  margin-left: 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-draw {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  font-family: var(--font-ransom);
+  font-size: 2rem;
+  padding: 1.5rem;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 8px 8px 0 var(--color-gold);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-draw:hover, .btn-draw:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0 var(--color-gold);
+}
+
+.btn-draw:active {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0 var(--color-gold);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-ui);
+  font-size: 1.25rem;
+  padding: 0.75rem;
+  border: 2px solid var(--color-ink);
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+}
+
+.counts-ticket {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--color-jade);
+  color: var(--color-chalk);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-ui);
+  font-size: 1.25rem;
+  font-weight: bold;
+  transform: rotate(3deg);
+  box-shadow: 4px 4px 0 var(--color-ink);
+  border: 2px solid var(--color-ink);
+}
+
+.history-list {
+  margin-left: 10%;
+  margin-top: 1rem;
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed var(--color-ink);
+}
+
+.reset-dialog {
+  background-color: var(--color-paper);
+  border: 4px solid var(--color-red);
+  padding: 2rem;
+  max-width: 400px;
+  box-shadow: 12px 12px 0 var(--color-ink);
+}
+
+.reset-dialog::backdrop {
+  background: rgba(9, 8, 13, 0.8);
+}
+
+.reset-dialog h2 {
+  font-family: var(--font-ransom);
+  color: var(--color-red);
+  margin-bottom: 1rem;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: flex-end;
+}

@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RouletteStage from '../components/raffle/RouletteStage.astro';
+import OperatorControls from '../components/raffle/OperatorControls.astro';
+import ResetDialog from '../components/raffle/ResetDialog.astro';
+import WinnerHistory from '../components/raffle/WinnerHistory.astro';
+import { EVENT_CONFIG } from '../config/event';
+import '../styles/raffle.css';
+---
+
+<BaseLayout
+  title={`Undian - ${EVENT_CONFIG.title}`}
+  description={`Halaman undian untuk ${EVENT_CONFIG.title}`}
+>
+  <div data-raffle-app class="raffle-stage">
+    <RouletteStage />
+    
+    <div class="stage-right">
+      <div class="counts-ticket" data-role="active-count">0/0</div>
+      
+      <div class="info-block">
+        <div class="prize-label" data-role="prize-position">Hadiah</div>
+        <div class="error-message" data-role="error" aria-live="polite"></div>
+        
+        <!-- Live region for screen readers announcing the winning value -->
+        <div class="sr-only" aria-live="polite" data-role="live-winner"></div>
+      </div>
+      
+      <OperatorControls />
+      <WinnerHistory />
+    </div>
+
+    <ResetDialog />
+  </div>
+</BaseLayout>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  .error-message {
+    color: var(--color-red);
+    font-weight: bold;
+    min-height: 1.5em;
+  }
+</style>
