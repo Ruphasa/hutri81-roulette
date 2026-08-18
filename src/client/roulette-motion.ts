@@ -82,17 +82,16 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
           }
         }
         
-        // We run a parallel proxy animation with the exact same easing and duration
-        // to sync the text randomization speed with the wheel's physical momentum.
+        // Text proxy uses MONOTONIC easing (easeOutCubic) — it only goes forward,
+        // slowing down naturally. Never bounces backward like elastic would.
+        // The wheel visual gets the dramatic elastic bounce separately.
         if (activeLots.length > 0 && readout) {
           anime({
             targets: proxy,
             angle: deltaAngle,
             duration: duration,
-            easing: 'easeOutElastic(1, .8)',
+            easing: 'easeOutCubic',
             update: () => {
-              // The text updates every 45 "degrees" of momentum.
-              // As the wheel slows down and bounces, the text will naturally follow.
               let tick = Math.max(0, Math.floor(proxy.angle / 45));
               if (tick !== lastIndex) {
                 readout.textContent = sequence[tick] ?? winner;
