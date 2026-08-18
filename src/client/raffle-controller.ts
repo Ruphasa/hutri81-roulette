@@ -5,7 +5,7 @@ import { loadRaffleState, saveRaffleState, clearRaffleState } from '../lib/persi
 import type { EventConfig, RaffleState } from '../domain/types';
 import { EVENT_CONFIG } from '../config/event';
 import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
-import { animateRoulette as defaultAnimateRoulette } from './roulette-motion';
+import { animateRoulette as defaultAnimateRoulette, resetCurrentRotation } from './roulette-motion';
 
 export interface ControllerDependencies {
   readonly config?: EventConfig | undefined;
@@ -15,8 +15,6 @@ export interface ControllerDependencies {
   readonly now?: (() => string) | undefined;
   readonly reducedMotion?: (() => boolean) | undefined;
 }
-
-let currentRotation = 0;
 
 export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies | undefined): () => void {
   const config = deps?.config || EVENT_CONFIG;
@@ -185,20 +183,6 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
 
     if (!saveAndRender()) return;
 
-    if (els.wheel && !deps?.animateRoulette) {
-      anime({
-        targets: els.wheel,
-        rotate: currentRotation + 1080 + Math.random() * 360,
-        duration: 5000,
-        easing: 'easeInQuad',
-        update: function(anim) {
-          if (anim.animations[0]?.currentValue) {
-            currentRotation = parseFloat(anim.animations[0].currentValue as string);
-          }
-        }
-      });
-    }
-
     await animateRoulette({
       wheel: els.wheel,
       readout: els.centerValue,
@@ -269,7 +253,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       els.centerValue.style.transform = '';
       els.centerValue.style.opacity = '';
     }
-    currentRotation = 0;
+    resetCurrentRotation();
     render();
   }
 

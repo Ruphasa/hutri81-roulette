@@ -25,15 +25,15 @@ test.describe('Offline capabilities', () => {
     await page.goto('/', { waitUntil: 'commit' });
     
     // Perform a draw
-    await page.locator('[data-role="draw"]').click();
+    await page.locator('[data-role="spin-button"], [data-role="draw"]').click();
     await page.locator('[data-role="advance"]').waitFor({ state: 'visible' });
     
-    const offlineWinner = await page.locator('[data-role="center-value"]').innerText();
+    const offlineWinner = await page.locator('[data-role="winner-display"], [data-role="center-value"]').innerText();
     
     // Reload while offline to check persistence
     await page.reload();
     
-    const recoveredWinner = await page.locator('[data-role="center-value"]').innerText();
+    const recoveredWinner = await page.locator('[data-role="winner-display"], [data-role="center-value"]').innerText();
     expect(recoveredWinner).toBe(offlineWinner);
     
     await context.close();

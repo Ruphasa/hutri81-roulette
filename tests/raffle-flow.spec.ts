@@ -15,13 +15,13 @@ test.describe('Raffle Flow', () => {
 
     const drawWinner = async () => {
       // Click draw
-      await page.locator('[data-role="draw"]').click();
+      await page.locator('[data-role="spin-button"], [data-role="draw"]').click();
       
       // Wait for advance button to be visible
       await page.locator('[data-role="advance"]').waitFor({ state: 'visible' });
       
       // Read winner
-      const winner = await page.locator('[data-role="center-value"]').innerText();
+      const winner = await page.locator('[data-role="winner-display"], [data-role="center-value"]').innerText();
       winners.push(winner);
       return winner;
     };
@@ -41,7 +41,7 @@ test.describe('Raffle Flow', () => {
     await page.reload();
 
     // Ensure state recovered
-    const recoveredWinner = await page.locator('[data-role="center-value"]').innerText();
+    const recoveredWinner = await page.locator('[data-role="winner-display"], [data-role="center-value"]').innerText();
     expect(recoveredWinner).toBe(secondWinner);
     await expect(page.locator('[data-role="advance"]')).toBeVisible();
 
@@ -70,7 +70,7 @@ test.describe('Raffle Flow', () => {
     expect(uniqueWinners.size).toBe(5);
 
     // Reset flow
-    await page.locator('[data-role="reset"]').click();
+    await page.locator('[data-role="reset-button"], [data-role="reset"]').click();
     await expect(page.locator('[data-role="reset-dialog"]')).toBeVisible();
     await page.locator('[data-role="reset-confirm"]').click();
 

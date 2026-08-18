@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mountRaffleApp, type ControllerDependencies } from './raffle-controller';
+import { getCurrentRotation } from './roulette-motion';
 import type { EventConfig } from '../domain/types';
 
 describe('Raffle Controller User Behavior', () => {
@@ -239,7 +240,7 @@ describe('Raffle Controller User Behavior', () => {
     expect(centerValue.textContent).toBe('A1');
   });
 
-  it('reset confirms and clears anime styling on wheel and winner display', async () => {
+  it('reset confirms and clears anime styling on wheel, winner display, and resets rotation', async () => {
     unmount = mountRaffleApp(root, deps);
     const resetBtn = root.querySelector('[data-role="reset"]') as HTMLButtonElement;
     const confirmBtn = root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement;
@@ -251,6 +252,7 @@ describe('Raffle Controller User Behavior', () => {
     confirmBtn.click();
     
     expect(wheel.style.transform).toBe('rotate(0deg)');
+    expect(getCurrentRotation()).toBe(0);
     expect(root.getAttribute('data-phase')).toBe('IDLE');
   });
 });
