@@ -68,16 +68,15 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         const sequence: string[] = [];
         
         // Build the perfectly sequential pre-rolled sequence
-        for (let i = 0; i <= totalTicks + 20; i++) {
-          if (i >= totalTicks) {
-            sequence.push(winner);
+        // We need to generate enough elements to cover the elastic overshoot.
+        // easeOutElastic can overshoot by ~15-20%, so we generate up to totalTicks * 1.5
+        const maxTick = Math.ceil(totalTicks * 1.5) + 50;
+        for (let i = 0; i <= maxTick; i++) {
+          if (activeLots.length > 0) {
+            const currentIndex = (startIndex + i) % activeLots.length;
+            sequence.push(activeLots[currentIndex] ?? winner);
           } else {
-            if (activeLots.length > 0) {
-              const currentIndex = (startIndex + i) % activeLots.length;
-              sequence.push(activeLots[currentIndex] ?? winner);
-            } else {
-              sequence.push(winner);
-            }
+            sequence.push(winner);
           }
         }
         
