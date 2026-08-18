@@ -33,17 +33,33 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
       }
       await new Promise(resolve => setTimeout(resolve, duration));
     } else {
-      if (activeLots.length > 0 && readout) {
-        let index = 0;
-        interval = setInterval(() => {
-          index = (index + 1) % activeLots.length;
-          readout.textContent = activeLots[index] ?? null;
-        }, 50);
-      }
-
       if (wheel) {
         anime.remove(wheel);
         const targetAngle = currentRotation + 1440 + (Math.random() * 360);
+        
+        let proxy = { angle: 0 };
+        let lastIndex = -1;
+        
+        // We run a parallel proxy animation with the exact same easing and duration
+        // to sync the text randomization speed with the wheel's physical momentum.
+        if (activeLots.length > 0 && readout) {
+          anime({
+            targets: proxy,
+            angle: targetAngle - currentRotation,
+            duration: duration,
+            easing: 'easeOutElastic(1, .8)',
+            update: () => {
+              // The text updates every 45 "degrees" of momentum.
+              // As the wheel slows down and bounces, the text will naturally follow.
+              let index = Math.abs(Math.floor(proxy.angle / 45)) % activeLots.length;
+              if (index !== lastIndex) {
+                readout.textContent = activeLots[index] ?? null;
+                lastIndex = index;
+              }
+            }
+          });
+        }
+
         await new Promise<void>(resolve => {
           anime({
             targets: wheel,
