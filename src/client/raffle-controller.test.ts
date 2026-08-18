@@ -28,6 +28,7 @@ describe('Raffle Controller User Behavior', () => {
         <div data-role="active-count"></div>
         <div data-role="prize-position"></div>
         <button data-role="draw">Undi</button>
+        <button data-role="forfeit-button" hidden>Hangus</button>
         <button data-role="advance">Lanjut</button>
         <button data-role="reset">Reset</button>
         <dialog data-role="reset-dialog">
@@ -275,4 +276,56 @@ describe('Raffle Controller User Behavior', () => {
     expect(getCurrentRotation()).toBe(0);
     expect(root.getAttribute('data-phase')).toBe('IDLE');
   });
+
+  it('forfeit button is hidden on IDLE and visible in REVEAL_WINNER', async () => {
+    unmount = mountRaffleApp(root, deps);
+    const forfeitBtn = root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement;
+    expect(forfeitBtn.hidden).toBe(true);
+
+    const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
+    drawBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
+    expect(forfeitBtn.hidden).toBe(false);
+    expect(forfeitBtn.disabled).toBe(false);
+  });
+
+  it('forfeit button click forfeits winner, retains same prize, and auto-spins new winner', async () => {
+    deps = {
+      ...deps,
+      selectWinner: vi.fn().mockReturnValueOnce('A1').mockReturnValueOnce('A2'),
+    };
+    unmount = mountRaffleApp(root, deps);
+    const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
+    const forfeitBtn = root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement;
+
+    // First draw wins A1
+    drawBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
+    let envelope = JSON.parse(mockStorage['hutri81-raffle:v1'] || 'null');
+    expect(envelope.payload.winners.length).toBe(1);
+    expect(envelope.payload.winners[0].lotId).toBe('A1');
+    expect(envelope.payload.prizeIndex).toBe(0);
+
+    // Click Forfeit
+    forfeitBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Should have re-spun and won A2 for prize 0
+    expect(deps.selectWinner).toHaveBeenCalledTimes(2);
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
+    envelope = JSON.parse(mockStorage['hutri81-raffle:v1'] || 'null');
+    expect(envelope.payload.winners.length).toBe(1);
+    expect(envelope.payload.winners[0].lotId).toBe('A2');
+    expect(envelope.payload.prizeIndex).toBe(0);
+    expect(envelope.payload.activeLots).not.toContain('A1');
+    expect(envelope.payload.activeLots).not.toContain('A2');
+  });
 });
+

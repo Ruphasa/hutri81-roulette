@@ -30,6 +30,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     activeCount: root.querySelector('[data-role="active-count"]') as HTMLElement | null,
     prizePosition: root.querySelector('[data-role="prize-position"]') as HTMLElement | null,
     drawBtn: (root.querySelector('[data-role="spin-button"]') || root.querySelector('[data-role="draw"]')) as HTMLButtonElement | null,
+    forfeitBtn: root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement | null,
     advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement | null,
     resetBtn: (root.querySelector('[data-role="reset-button"]') || root.querySelector('[data-role="reset"]')) as HTMLButtonElement | null,
     resetDialog: root.querySelector('[data-role="reset-dialog"]') as HTMLDialogElement | null,
@@ -76,6 +77,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
         els.errorPanel.hidden = false;
       }
       if (els.drawBtn) els.drawBtn.disabled = true;
+      if (els.forfeitBtn) els.forfeitBtn.disabled = true;
       if (els.advanceBtn) els.advanceBtn.disabled = true;
       if (els.resetBtn) els.resetBtn.disabled = true;
       return;
@@ -102,23 +104,34 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       if (els.advanceBtn) {
         els.drawBtn.disabled = currentUiPhase !== 'IDLE';
         els.drawBtn.hidden = currentUiPhase === 'REVEAL_WINNER' || currentUiPhase === 'COMPLETE';
+        if (els.forfeitBtn) {
+          els.forfeitBtn.hidden = currentUiPhase !== 'REVEAL_WINNER';
+          els.forfeitBtn.disabled = currentUiPhase !== 'REVEAL_WINNER';
+        }
       } else {
         if (currentUiPhase === 'IDLE') {
           els.drawBtn.textContent = 'PUTAR SEKARANG';
           els.drawBtn.disabled = false;
           els.drawBtn.hidden = false;
+          if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         } else if (currentUiPhase === 'SPINNING') {
           els.drawBtn.textContent = 'MEMUTAR...';
           els.drawBtn.disabled = true;
           els.drawBtn.hidden = false;
+          if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         } else if (currentUiPhase === 'REVEAL_WINNER') {
           els.drawBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'LIHAT SEMUA PEMENANG' : 'LANJUT & PUTAR';
           els.drawBtn.disabled = false;
           els.drawBtn.hidden = false;
+          if (els.forfeitBtn) {
+            els.forfeitBtn.hidden = false;
+            els.forfeitBtn.disabled = false;
+          }
         } else if (currentUiPhase === 'COMPLETE') {
           els.drawBtn.textContent = 'SEMUA PEMENANG SELESAI';
           els.drawBtn.disabled = true;
           els.drawBtn.hidden = false;
+          if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         }
       }
     }
@@ -215,6 +228,25 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
   }
 
+  async function handleForfeit() {
+    if (currentUiPhase !== 'REVEAL_WINNER') return;
+    try {
+      state = transition(state, { type: 'FORFEIT' }, config.prizes);
+    } catch (e: any) {
+      currentUiPhase = 'ERROR';
+      errorMessage = e.message;
+      render();
+      return;
+    }
+    
+    if (!saveAndRender()) return;
+    
+    // Automatically trigger next draw for the same prize
+    if ((currentUiPhase as string) === 'IDLE') {
+      await handleDraw();
+    }
+  }
+
   async function handleMainClick() {
     if (currentUiPhase === 'IDLE') {
       await handleDraw();
@@ -279,6 +311,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       els.drawBtn.addEventListener('click', handleMainClick);
     }
   }
+  if (els.forfeitBtn) els.forfeitBtn.addEventListener('click', handleForfeit);
   if (els.resetBtn) els.resetBtn.addEventListener('click', handleResetClick);
   if (els.resetCancelBtn) els.resetCancelBtn.addEventListener('click', handleResetCancel);
   if (els.resetConfirmBtn) els.resetConfirmBtn.addEventListener('click', handleResetConfirm);
@@ -296,6 +329,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
         els.drawBtn.removeEventListener('click', handleMainClick);
       }
     }
+    if (els.forfeitBtn) els.forfeitBtn.removeEventListener('click', handleForfeit);
     if (els.resetBtn) els.resetBtn.removeEventListener('click', handleResetClick);
     if (els.resetCancelBtn) els.resetCancelBtn.removeEventListener('click', handleResetCancel);
     if (els.resetConfirmBtn) els.resetConfirmBtn.removeEventListener('click', handleResetConfirm);
