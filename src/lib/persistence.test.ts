@@ -261,19 +261,18 @@ describe('loadRaffleState', () => {
     }
   });
 
-  it('returns incompatible status when eventFingerprint does not match the current config', () => {
+  it('auto-resets storage and returns empty status when eventFingerprint does not match the current config', () => {
     const otherConfig: EventConfig = {
       ...baseConfig,
       id: 'other-event-config',
     };
     const storage = createMockStorage();
     saveRaffleState(storage, otherConfig, idleState);
+    expect(storage.getItem(STORAGE_KEY)).not.toBeNull();
 
     const result = loadRaffleState(storage, baseConfig);
-    expect(result.status).toBe('incompatible');
-    if (result.status === 'incompatible') {
-      expect(result.reason).toContain('Sidik jari acara');
-    }
+    expect(result).toEqual({ status: 'empty' });
+    expect(storage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it('returns incompatible status when payload fails domain invariants', () => {

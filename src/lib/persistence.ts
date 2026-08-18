@@ -93,10 +93,8 @@ export function loadRaffleState(
 
   const expectedFingerprint = eventFingerprint(config);
   if (typeof envelope.eventFingerprint !== 'string' || envelope.eventFingerprint !== expectedFingerprint) {
-    return {
-      status: 'incompatible',
-      reason: 'Sidik jari acara tidak cocok dengan konfigurasi saat ini.',
-    };
+    clearRaffleState(storage);
+    return { status: 'empty' };
   }
 
   if (typeof envelope.payload !== 'object' || envelope.payload === null || Array.isArray(envelope.payload)) {

@@ -196,6 +196,26 @@ describe('Raffle Controller User Behavior', () => {
     expect(root.getAttribute('data-phase')).toBe('ERROR');
   });
 
+  it('auto-resets to IDLE without error when config fingerprint mismatches', () => {
+    const staleEnvelope = {
+      schemaVersion: 1,
+      eventFingerprint: 'old-fingerprint-mismatch',
+      payload: {
+        phase: 'winner',
+        activeLots: ['A1'],
+        winners: [{ lotId: 'A2', prizeId: 'p1', prizeLabel: 'Prize 1', drawnAt: '2026-08-18T10:00:00Z' }],
+        prizeIndex: 0,
+        pendingWinner: null,
+      },
+    };
+    mockStorage['hutri81-raffle:v1'] = JSON.stringify(staleEnvelope);
+    unmount = mountRaffleApp(root, deps);
+    const errorEl = root.querySelector('[data-role="error"]') as HTMLElement;
+    expect(errorEl.hidden).toBe(true);
+    expect(root.getAttribute('data-phase')).toBe('IDLE');
+    expect(deps.storage!.removeItem).toHaveBeenCalledWith('hutri81-raffle:v1');
+  });
+
   it('final winner changes the primary action to Lihat Semua Pemenang', async () => {
     unmount = mountRaffleApp(root, deps);
     const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
