@@ -51,14 +51,93 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toContain('.sunburst-svg');
   });
 
-  it('configures ransom note typography and skewed blocks in global.css', () => {
+  it('configures ransom note typography, colors, and tilted blocks in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.ransom-title');
     expect(css).toMatch(/\.ransom-title\s*\{[\s\S]*position:\s*absolute;/);
     expect(css).toMatch(/\.ransom-title\s+\.word\s*\{[\s\S]*font-family:\s*var\(--font-heavy\);/);
-    expect(css).toContain('.block-1');
-    expect(css).toContain('.block-2');
-    expect(css).toContain('.block-3');
+    
+    // Block 1: White text on Black bg, tilted left
+    expect(css).toMatch(/\.block-1\s*\{[\s\S]*background:\s*var\(--color-black\);[\s\S]*color:\s*var\(--color-white\);[\s\S]*transform:\s*rotate\(-/);
+    
+    // Block 2: Black text on Gold bg, tilted right
+    expect(css).toMatch(/\.block-2\s*\{[\s\S]*background:\s*var\(--color-gold\);[\s\S]*color:\s*var\(--color-black\);[\s\S]*transform:\s*rotate\([0-9]/);
+    
+    // Block 3: White text on Red bg, tilted left
+    expect(css).toMatch(/\.block-3\s*\{[\s\S]*background:\s*var\(--color-crimson\);[\s\S]*color:\s*var\(--color-white\);[\s\S]*transform:\s*rotate\(-/);
+  });
+
+  it('configures top-left badge and diamond in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="top-left-badge"');
+    expect(astro).toContain('GRIYA SHANTA &middot; RT 08');
+    expect(astro).toContain('class="top-left-diamond"');
+
+    expect(css).toContain('.top-left-badge');
+    expect(css).toMatch(/\.top-left-badge\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
+    expect(css).toMatch(/\.top-left-badge\s*\{[\s\S]*color:\s*var\(--color-black\);/);
+    expect(css).toMatch(/\.top-left-badge\s*\{[\s\S]*transform:\s*skewX\(-/);
+
+    expect(css).toContain('.top-left-diamond');
+    expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*border:\s*2px\s+solid\s+var\(--color-gold\);/);
+    expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*transform:\s*rotate\(45deg\);/);
+  });
+
+  it('configures top-right stats badges in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="top-right-stats"');
+    expect(astro).toContain('class="stat-gold"');
+    expect(astro).toContain('164 NOMOR TERSISA');
+    expect(astro).toContain('class="stat-cream"');
+    expect(astro).toContain('HADIAH 02/05');
+
+    expect(css).toContain('.top-right-stats');
+    expect(css).toMatch(/\.stat-gold\s*\{[\s\S]*background:\s*var\(--color-gold\);/);
+    expect(css).toMatch(/\.stat-gold\s*\{[\s\S]*color:\s*var\(--color-black\);/);
+    expect(css).toContain('.stat-cream');
+  });
+
+  it('configures middle-right text with highlight in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="middle-right-text"');
+    expect(astro).toContain('PUTAR RODA. TAHAN NAPAS.');
+    expect(astro).toContain('class="highlight"');
+    expect(astro).toContain('BIARKAN NASIB MEMILIH');
+    expect(astro).toContain('NOMOR KAVLING MALAM INI.');
+
+    expect(css).toContain('.middle-right-text');
+    expect(css).toMatch(/\.middle-right-text\s+\.highlight\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
+  });
+
+  it('configures bottom-left tilted text with white underline in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="bottom-left-text"');
+    expect(astro).toContain('sekali putar, satu pemenang!');
+
+    expect(css).toContain('.bottom-left-text');
+    expect(css).toMatch(/\.bottom-left-text\s*\{[\s\S]*transform:\s*rotate\(-/);
+    expect(css).toMatch(/\.bottom-left-text\s*\{[\s\S]*(border-bottom:\s*2px\s+solid\s+var\(--color-white\)|text-decoration:\s*underline)/);
+  });
+
+  it('configures bottom-right button trapezoid, subtext, and red diamond in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('ENTER - MULAI UNDIAN');
+    expect(astro).toContain('class="bottom-right-diamond"');
+
+    expect(css).toContain('.skew-btn');
+    expect(css).toContain('.bottom-right-diamond');
+    expect(css).toMatch(/\.bottom-right-diamond\s*\{[\s\S]*border:\s*3px\s+solid\s+var\(--color-crimson\);/);
+    expect(css).toMatch(/\.bottom-right-diamond\s*\{[\s\S]*transform:\s*rotate\(45deg\);/);
   });
 
   it('configures wheel wrapper, SVG wheel, center badge, and diamond pointer in global.css', () => {

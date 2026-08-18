@@ -10,6 +10,7 @@ test.describe('Offline capabilities', () => {
     
     // Wait for SW to be ready
     await page.locator('.offline-status-text').filter({ hasText: 'Siap Offline' }).waitFor({ state: 'visible' });
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     
     // Close the page
     await page.close();
