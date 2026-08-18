@@ -12,10 +12,12 @@ describe('Global Styles and 16:9 Layout', () => {
 
   it('defines custom properties in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
-    expect(css).toContain('--color-crimson: #E02626;');
-    expect(css).toContain('--color-cream: #EBE5D3;');
-    expect(css).toContain('--color-black: #0D0D0D;');
-    expect(css).toContain('--color-gold: #F2C94C;');
+    expect(css).toContain('--color-crimson: #D92525;');
+    expect(css).toContain('--color-cream: #F1E8D1;');
+    expect(css).toContain('--color-black: #0F1012;');
+    expect(css).toContain('--color-gold: #C19F48;');
+    expect(css).toContain('--color-green: #1F7359;');
+    expect(css).toContain('--color-white: #FFFFFF;');
     expect(css).toContain("--font-deco: 'Limelight', sans-serif;");
     expect(css).toContain("--font-heavy: 'Bowlby One SC', sans-serif;");
     expect(css).toContain("--font-condensed: 'Barlow Condensed', sans-serif;");
@@ -25,13 +27,28 @@ describe('Global Styles and 16:9 Layout', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*aspect-ratio:\s*16\s*\/\s*9;/);
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*max-width:\s*calc\(100vh\s*\*\s*\(16\s*\/\s*9\)\);/);
+    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*background:\s*(#0F1012|var\(--color-black\));/);
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*overflow:\s*hidden;/);
   });
 
   it('configures diagonal split background classes in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*100%\s+0,\s*80%\s+100%,\s*0\s+100%\);/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(20%\s+0,\s*100%\s+0,\s*100%\s+100%,\s*0\s+100%\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*53%\s+0,\s*48%\s+100%,\s*0\s+100%\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*100%;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(70%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*55%\s+100%\);/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*100%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
+  });
+
+  it('includes sunburst svg lines in .bg-cream-split in index.astro and global.css', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+    expect(astro).toContain('class="sunburst-svg"');
+    expect(astro).toContain('<line');
+    expect(css).toContain('.sunburst-svg');
   });
 
   it('configures ransom note typography and skewed blocks in global.css', () => {
