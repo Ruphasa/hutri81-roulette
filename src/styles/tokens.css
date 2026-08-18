@@ -1,0 +1,13 @@
+:root {
+  --color-ink: #09080d;
+  --color-paper: #f2e7ca;
+  --color-red: #e12631;
+  --color-gold: #d6aa35;
+  --color-jade: #087b68;
+  --color-chalk: #fffaf0;
+  --font-deco: "Limelight", serif;
+  --font-ransom: "Bowlby One SC", sans-serif;
+  --font-ui: "Barlow Condensed", sans-serif;
+  --ease-wheel: cubic-bezier(.12, .72, .08, 1);
+  --projector-min-height: 768px;
+}
