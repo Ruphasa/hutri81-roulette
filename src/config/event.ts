@@ -6,8 +6,13 @@ export const EVENT_CONFIG: EventConfig = {
   neighborhood: 'Griya Shanta RT 08',
   // Replace only this list with the final ranges before production.
   lotRanges: [
-    { prefix: 'L', start: 201, end: 250 },
-    { prefix: 'K', start: 301, end: 450 },
+    { prefix: 'L-', start: 1, end: 14 },
+    { prefix: 'L-', start: 101, end: 142 },
+    { prefix: 'L-', start: 201, end: 240 },
+    { prefix: 'L-', start: 242, end: 257 },
+    { prefix: 'K-', start: 301, end: 315 },
+    { prefix: 'K-', start: 333, end: 361 },
+    { prefix: 'K-', start: 404, end: 412 },
   ],
   prizes: [
     { id: 'hadiah-1', label: 'Hadiah ke-1' },
