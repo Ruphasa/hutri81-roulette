@@ -139,9 +139,10 @@ body {
   top: 2%;
   right: 2.5%;
   display: flex;
-  align-items: center;
-  gap: 1.2vw;
+  align-items: stretch;
   z-index: 10;
+  transform: skewX(-15deg);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
 }
 
 .stat-gold {
@@ -152,17 +153,18 @@ body {
   font-style: italic;
   font-size: 1.1vw;
   letter-spacing: 0.5px;
-  padding: 0.25em 0.8em;
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+  padding: 0.35em 1.2em;
 }
 
 .stat-cream {
+  background: var(--color-cream);
   color: var(--color-black);
   font-family: var(--font-condensed);
   font-weight: 800;
   font-style: italic;
   font-size: 1.1vw;
   letter-spacing: 0.5px;
+  padding: 0.35em 1.2em;
 }
 
 /* Ransom Note Title */
@@ -187,14 +189,15 @@ body {
 .block-1 {
   background: var(--color-black);
   color: var(--color-white);
-  font-size: 3.2vw;
+  font-family: var(--font-deco);
+  font-size: 2.5vw;
   transform: rotate(-3deg);
 }
 
 .block-2 {
   background: var(--color-gold);
   color: var(--color-black);
-  font-size: 4.2vw;
+  font-size: 3.2vw;
   transform: rotate(3deg);
   margin-left: -1vw;
   padding: 0.15em 0.7em;
@@ -203,37 +206,13 @@ body {
 .block-3 {
   background: var(--color-crimson);
   color: var(--color-white);
-  font-size: 3.5vw;
+  font-family: var(--font-heavy);
+  font-size: 2.6vw;
   transform: rotate(-2deg);
   margin-left: 1.5vw;
 }
 
-/* Divider Accent under Ransom Title */
-.divider-accent {
-  position: absolute;
-  top: 46%;
-  right: 5%;
-  width: 32vw;
-  display: flex;
-  align-items: center;
-  z-index: 5;
-  pointer-events: none;
-}
 
-.divider-line {
-  flex: 1;
-  height: 2px;
-  background: var(--color-gold);
-}
-
-.divider-diamond {
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--color-gold);
-  transform: rotate(45deg);
-  margin-left: 8px;
-  background: var(--color-cream);
-}
 
 /* Middle Right Text */
 .middle-right-text {
@@ -474,8 +453,8 @@ body {
 
 .status-bar {
   position: absolute;
-  bottom: 1%;
-  left: 1%;
+  bottom: 2%;
+  left: 45%;
   font-family: var(--font-condensed);
   color: var(--color-black);
   background: transparent;
