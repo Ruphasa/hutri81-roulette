@@ -3,8 +3,9 @@ import { test, expect } from '@playwright/test';
 test.describe('Raffle Flow', () => {
   test('Five prizes, recovery, and reset flow', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/draw/');
+    await page.goto('/');
     await page.locator('.offline-status-text').filter({ hasText: 'Siap Offline' }).waitFor({ state: 'visible' });
+    await page.goto('/draw/');
 
     // Check initial active count
     const initialActiveCountText = await page.locator('[data-role="active-count"]').innerText();
@@ -39,7 +40,6 @@ test.describe('Raffle Flow', () => {
     
     // Reload after 2nd draw
     await page.reload();
-    await page.locator('.offline-status-text').filter({ hasText: 'Siap Offline' }).waitFor({ state: 'visible' });
 
     // Ensure state recovered
     const recoveredWinner = await page.locator('[data-role="center-value"]').innerText();

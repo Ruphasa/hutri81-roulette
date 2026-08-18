@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Offline capabilities', () => {
-  test('Should be able to draw while offline', async ({ browser }) => {
-    // We create our own context to control offline state
-    const context = await browser.newContext({ colorScheme: 'light' });
+  test('Should be able to draw while offline', async ({ context }) => {
     let page = await context.newPage();
     await page.emulateMedia({ reducedMotion: 'reduce' });
     
-    // Load page online
-    await page.goto('/draw/');
+    // Load page online to install SW
+    await page.goto('/');
     
     // Wait for SW to be ready
     await page.locator('.offline-status-text').filter({ hasText: 'Siap Offline' }).waitFor({ state: 'visible' });
@@ -16,13 +14,15 @@ test.describe('Offline capabilities', () => {
     // Close the page
     await page.close();
     
-    // Set offline
-    await context.setOffline(true);
-    
     // Open a new page in the same offline context
     page = await context.newPage();
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/draw/');
+    await page.waitForTimeout(500);
+    
+    // Set offline
+    await context.setOffline(true);
+    
+    await page.goto('/draw/', { waitUntil: 'commit' });
     
     // Perform a draw
     await page.locator('[data-role="draw"]').click();
