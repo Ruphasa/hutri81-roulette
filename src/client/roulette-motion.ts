@@ -33,25 +33,41 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
     } else {
       if (wheel) {
         anime.remove(wheel);
-        const targetAngle = currentRotation + 1440 + (Math.random() * 360);
-        
-        let proxy = { angle: 0 };
-        let lastIndex = -1;
-        
-        const deltaAngle = targetAngle - currentRotation;
-        const totalTicks = Math.floor(deltaAngle / 45);
-        const sequence: string[] = [];
+        // 1. "init" - start exactly from the currently displayed text
+        const startLot = readout?.textContent?.trim() || '';
+        let startIndex = activeLots.indexOf(startLot);
+        if (startIndex === -1) {
+          // If no previous winner, pick a random start
+          startIndex = Math.floor(Math.random() * activeLots.length);
+        }
         
         const winnerIndex = activeLots.indexOf(winner);
         const effectiveWinnerIndex = winnerIndex >= 0 ? winnerIndex : 0;
         
-        // To make it look like a physical wheel, we want the numbers to appear in order.
-        // We need the index at `totalTicks` to be exactly `effectiveWinnerIndex`.
-        // So `startIndex = effectiveWinnerIndex - totalTicks`.
-        // We use modular arithmetic to wrap around `activeLots`.
-        const startIndex = ((effectiveWinnerIndex - (totalTicks % activeLots.length)) % activeLots.length + activeLots.length) % activeLots.length;
+        // Calculate the exact distance in the array from start to winner
+        let distance = (effectiveWinnerIndex - startIndex + activeLots.length) % activeLots.length;
         
-        // Build pre-rolled sequence
+        // 2. "interval" - We want the wheel to spin at least 50 ticks (2250 degrees)
+        // so we add full revolutions of the array until it's a long enough spin.
+        let totalTicks = distance;
+        const MIN_TICKS = 50;
+        if (activeLots.length > 0) {
+          while (totalTicks < MIN_TICKS) {
+            totalTicks += activeLots.length;
+          }
+        }
+        
+        // Now calculate the exact angle the physical wheel needs to spin
+        // so that it exactly matches the array traversal.
+        const deltaAngle = totalTicks * 45;
+        const targetAngle = currentRotation + deltaAngle;
+        
+        let proxy = { angle: 0 };
+        let lastIndex = -1;
+        
+        const sequence: string[] = [];
+        
+        // Build the perfectly sequential pre-rolled sequence
         for (let i = 0; i <= totalTicks + 20; i++) {
           if (i >= totalTicks) {
             sequence.push(winner);
