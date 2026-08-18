@@ -190,14 +190,14 @@ body {
   background: var(--color-black);
   color: var(--color-white);
   font-family: var(--font-deco);
-  font-size: 3vw;
+  font-size: 3.2vw;
   transform: rotate(-3deg);
 }
 
 .block-2 {
   background: var(--color-gold);
   color: var(--color-black);
-  font-family: var(--font-deco);
+  font-family: 'Britannic Bold', var(--font-heavy), sans-serif;
   font-size: 4vw;
   transform: rotate(3deg);
   margin-left: -1vw;
@@ -207,8 +207,8 @@ body {
 .block-3 {
   background: var(--color-crimson);
   color: var(--color-white);
-  font-family: var(--font-deco);
-  font-size: 3.3vw;
+  font-family: var(--font-heavy);
+  font-size: 3vw;
   transform: rotate(-2deg);
   margin-left: 1.5vw;
 }
