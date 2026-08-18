@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Base background -->
+  <rect width="512" height="512" rx="96" fill="#09080d" />
+
+  <!-- Outer Decorative Ring -->
+  <circle cx="256" cy="256" r="216" fill="none" stroke="#d6aa35" stroke-width="6" opacity="0.4" />
+  <circle cx="256" cy="256" r="200" fill="#09080d" stroke="#d6aa35" stroke-width="12" />
+
+  <!-- Inner Roulette Track -->
+  <circle cx="256" cy="256" r="188" fill="#09080d" stroke="#f2e7ca" stroke-width="2" />
+
+  <!-- Roulette Segments (8 slices) -->
+  <g transform="translate(256, 256)">
+    <!-- Slice 1: 0 - 45 deg (Red) -->
+    <path d="M 0 0 L 188 0 A 188 188 0 0 1 132.94 132.94 Z" fill="#e12631" />
+    <!-- Slice 2: 45 - 90 deg (Black with Gold border) -->
+    <path d="M 0 0 L 132.94 132.94 A 188 188 0 0 1 0 188 Z" fill="#09080d" />
+    <!-- Slice 3: 90 - 135 deg (Red) -->
+    <path d="M 0 0 L 0 188 A 188 188 0 0 1 -132.94 132.94 Z" fill="#e12631" />
+    <!-- Slice 4: 135 - 180 deg (Black with Gold border) -->
+    <path d="M 0 0 L -132.94 132.94 A 188 188 0 0 1 -188 0 Z" fill="#09080d" />
+    <!-- Slice 5: 180 - 225 deg (Red) -->
+    <path d="M 0 0 L -188 0 A 188 188 0 0 1 -132.94 -132.94 Z" fill="#e12631" />
+    <!-- Slice 6: 225 - 270 deg (Black with Gold border) -->
+    <path d="M 0 0 L -132.94 -132.94 A 188 188 0 0 1 0 -188 Z" fill="#09080d" />
+    <!-- Slice 7: 270 - 315 deg (Red) -->
+    <path d="M 0 0 L 0 -188 A 188 188 0 0 1 132.94 -132.94 Z" fill="#e12631" />
+    <!-- Slice 8: 315 - 360 deg (Black with Gold border) -->
+    <path d="M 0 0 L 132.94 -132.94 A 188 188 0 0 1 188 0 Z" fill="#09080d" />
+
+    <!-- Segment Dividers -->
+    <line x1="0" y1="0" x2="188" y2="0" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="132.94" y2="132.94" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="0" y2="188" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="-132.94" y2="132.94" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="-188" y2="0" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="-132.94" y2="-132.94" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="0" y2="-188" stroke="#d6aa35" stroke-width="3" />
+    <line x1="0" y1="0" x2="132.94" y2="-132.94" stroke="#d6aa35" stroke-width="3" />
+
+    <!-- Inner Wheel Track -->
+    <circle cx="0" cy="0" r="110" fill="none" stroke="#f2e7ca" stroke-width="4" stroke-dasharray="8 8" />
+
+    <!-- Center Hub -->
+    <circle cx="0" cy="0" r="64" fill="#09080d" stroke="#d6aa35" stroke-width="6" />
+    <circle cx="0" cy="0" r="48" fill="#d6aa35" />
+    <circle cx="0" cy="0" r="28" fill="#f2e7ca" stroke="#09080d" stroke-width="4" />
+    <circle cx="0" cy="0" r="10" fill="#e12631" />
+  </g>
+
+  <!-- Pointer Needle at top center (12 o'clock) -->
+  <polygon points="256,128 224,40 288,40" fill="#d6aa35" stroke="#09080d" stroke-width="4" stroke-linejoin="round" />
+  <polygon points="256,116 232,48 280,48" fill="#f2e7ca" />
+  <circle cx="256" cy="48" r="8" fill="#e12631" />
+</svg>

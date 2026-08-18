@@ -1,19 +1,60 @@
 ---
 ---
-<div class="offline-status" aria-live="polite" data-role="offline-status">
-  <p>Aplikasi ini dapat berjalan tanpa koneksi internet (Offline First).</p>
+<div class="offline-status" aria-live="polite" data-role="offline-status" data-state="unready">
+  <span class="offline-status-dot" aria-hidden="true"></span>
+  <span class="offline-status-text" data-role="offline-status-text">Belum Siap Offline</span>
 </div>
 
 <style>
   .offline-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background-color: var(--color-ink);
     color: var(--color-chalk);
     border: 1px dashed var(--color-chalk);
     padding: 0.5rem 1rem;
     margin-bottom: 2rem;
-    display: inline-block;
     align-self: flex-start;
     font-family: var(--font-ui);
     font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .offline-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #888888;
+  }
+
+  .offline-status[data-state="ready"] {
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+  }
+
+  .offline-status[data-state="ready"] .offline-status-dot {
+    background-color: var(--color-gold);
+    box-shadow: 0 0 6px var(--color-gold);
+  }
+
+  .offline-status[data-state="update-available"] {
+    border-color: var(--color-red);
+    color: var(--color-chalk);
+  }
+
+  .offline-status[data-state="update-available"] .offline-status-dot {
+    background-color: var(--color-red);
+    box-shadow: 0 0 6px var(--color-red);
   }
 </style>
+
+<script>
+  import { bindOfflineStatus } from '../client/offline-status';
+
+  const statusElements = document.querySelectorAll<HTMLElement>('[data-role="offline-status"]');
+  statusElements.forEach((el) => {
+    bindOfflineStatus(el);
+  });
+</script>

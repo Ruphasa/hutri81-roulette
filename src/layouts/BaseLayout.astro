@@ -20,9 +20,17 @@ const { title, description, bodyClass } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#e12631" />
+    <link rel="icon" type="image/svg+xml" href="/brand-icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>{title}</title>
   </head>
   <body class={bodyClass}>
     <slot />
+    <script>
+      import { initPWARegistration } from '../client/offline-status';
+      initPWARegistration();
+    </script>
   </body>
 </html>
