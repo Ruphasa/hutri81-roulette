@@ -77,22 +77,38 @@ function assertStoredStateInvariants(state: RaffleState, prizes: readonly Prize[
     winnerLots.add(winner.lotId);
   }
 
-  if (state.pendingWinner === null) {
-    return;
+  if (state.pendingWinner !== null) {
+    if (state.activeLots.includes(state.pendingWinner.lotId)) {
+      throw new Error('Pemenang tertunda masih aktif.');
+    }
+
+    if (winnerLots.has(state.pendingWinner.lotId)) {
+      throw new Error('Pemenang tertunda sudah tercatat sebagai pemenang.');
+    }
+
+    const prize = currentPrize(state, prizes);
+
+    if (prize.id !== state.pendingWinner.prizeId || prize.label !== state.pendingWinner.prizeLabel) {
+      throw new Error('Pemenang tertunda tidak cocok dengan hadiah saat ini.');
+    }
   }
 
-  if (state.activeLots.includes(state.pendingWinner.lotId)) {
-    throw new Error('Pemenang tertunda masih aktif.');
+  const expectedWinnerCount = state.phase === 'winner'
+    ? state.prizeIndex + 1
+    : state.phase === 'complete'
+      ? prizes.length
+      : state.prizeIndex;
+
+  if (state.winners.length !== expectedWinnerCount) {
+    throw new Error('Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.');
   }
 
-  if (winnerLots.has(state.pendingWinner.lotId)) {
-    throw new Error('Pemenang tertunda sudah tercatat sebagai pemenang.');
-  }
+  for (const [index, winner] of state.winners.entries()) {
+    const prize = prizes[index];
 
-  const prize = currentPrize(state, prizes);
-
-  if (prize.id !== state.pendingWinner.prizeId || prize.label !== state.pendingWinner.prizeLabel) {
-    throw new Error('Pemenang tertunda tidak cocok dengan hadiah saat ini.');
+    if (prize === undefined || prize.id !== winner.prizeId || prize.label !== winner.prizeLabel) {
+      throw new Error('Urutan hadiah pemenang tersimpan tidak cocok dengan konfigurasi.');
+    }
   }
 }
 

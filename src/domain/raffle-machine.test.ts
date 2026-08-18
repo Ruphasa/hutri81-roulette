@@ -178,6 +178,35 @@ describe('stabilizeRestoredState', () => {
     );
   });
 
+  it('rejects winner histories whose count does not match the phase and prize index', () => {
+    const initial = createInitialState(config, fullPool);
+    const missingWinner: RaffleState = { ...initial, phase: 'winner' };
+    const skippedIdleWinner: RaffleState = { ...initial, prizeIndex: 1 };
+    const emptyComplete: RaffleState = { ...initial, phase: 'complete', prizeIndex: 2 };
+
+    expect(() => stabilizeRestoredState(missingWinner, prizes)).toThrow(
+      'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
+    );
+    expect(() => stabilizeRestoredState(skippedIdleWinner, prizes)).toThrow(
+      'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
+    );
+    expect(() => stabilizeRestoredState(emptyComplete, prizes)).toThrow(
+      'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
+    );
+  });
+
+  it('rejects winner histories whose prize order differs from the configured order', () => {
+    const wrongPrizeOrder: RaffleState = {
+      ...createInitialState(config, ['L202', 'L203']),
+      prizeIndex: 1,
+      winners: [{ lotId: 'L201', prizeId: 'hadiah-2', prizeLabel: 'Hadiah ke-2', drawnAt }],
+    };
+
+    expect(() => stabilizeRestoredState(wrongPrizeOrder, prizes)).toThrow(
+      'Urutan hadiah pemenang tersimpan tidak cocok dengan konfigurasi.',
+    );
+  });
+
   it('rejects restored pools and histories with duplicate or overlapping lots', () => {
     const duplicateActiveLots: RaffleState = {
       ...createInitialState(config, fullPool),
@@ -236,5 +265,16 @@ describe('stabilizeRestoredState', () => {
     expect(() => stabilizeRestoredState(pendingAlreadyWon, prizes)).toThrow(
       'Pemenang tertunda sudah tercatat sebagai pemenang.',
     );
+  });
+
+  it('retains valid zero-prize completion and reset states', () => {
+    const zeroPrizeConfig: EventConfig = { ...config, prizes: [] };
+    const initial = createInitialState(zeroPrizeConfig, fullPool);
+    const restored = stabilizeRestoredState(initial, zeroPrizeConfig.prizes);
+    const reset = transition(restored, { type: 'RESET', fullPool }, zeroPrizeConfig.prizes);
+
+    expect(initial).toMatchObject({ phase: 'complete', prizeIndex: 0, winners: [] });
+    expect(restored).toEqual(initial);
+    expect(reset).toEqual(initial);
   });
 });
