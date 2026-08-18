@@ -32,6 +32,37 @@ describe('generateLots', () => {
       'A010',
     ]);
   });
+
+  it('fails fast when ranges are unsafe or impractical to generate', () => {
+    expect(() =>
+      generateLots([{ prefix: 'L', start: Number.MAX_SAFE_INTEGER + 1, end: 1 }]),
+    ).toThrow('batas bilangan bulat aman');
+    expect(() => generateLots([{ prefix: 'L', start: 1, end: 1_001 }])).toThrow(
+      'melebihi batas praktis 1000 nomor',
+    );
+    expect(() =>
+      generateLots([
+        { prefix: 'L', start: 1, end: 1_000 },
+        { prefix: 'K', start: 1, end: 1_000 },
+        { prefix: 'M', start: 1, end: 1 },
+      ]),
+    ).toThrow('Total nomor kavling melebihi batas praktis 2000 nomor');
+    expect(() => generateLots([{ prefix: 'L', start: 1, end: 1, padTo: 13 }])).toThrow(
+      'panjang padding tidak valid',
+    );
+    expect(() =>
+      generateLots([{ prefix: 'L', start: 1, end: 1, padTo: Number.MAX_SAFE_INTEGER + 1 }]),
+    ).toThrow('panjang padding tidak valid');
+    expect(() => generateLots([{ prefix: 'L', start: 0, end: 1 }])).toThrow(
+      'harus memakai nomor positif',
+    );
+  });
+
+  it('rejects non-canonical prefixes before generating ambiguous IDs', () => {
+    expect(() => generateLots([{ prefix: 'L ', start: 1, end: 1 }])).toThrow(
+      'awalan tidak kanonis',
+    );
+  });
 });
 
 describe('validateEventConfig', () => {
@@ -57,6 +88,21 @@ describe('validateEventConfig', () => {
     ).toContain('Rentang nomor kavling ke-1 memiliki awalan kosong.');
   });
 
+  it('reports prefixes with surrounding or control whitespace', () => {
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: ' L', start: 201, end: 203 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 memiliki awalan tidak kanonis.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: 'L\n', start: 201, end: 203 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 memiliki awalan tidak kanonis.');
+  });
+
   it('reports duplicate output across ranges', () => {
     expect(
       validateEventConfig({
@@ -78,6 +124,76 @@ describe('validateEventConfig', () => {
   it('reports an empty prize list', () => {
     expect(validateEventConfig({ ...validConfig, prizes: [] })).toContain(
       'Daftar hadiah tidak boleh kosong.',
+    );
+  });
+
+  it('reports unsafe bounds and impractical range sizes without generating them', () => {
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: 'L', start: Number.MAX_SAFE_INTEGER + 1, end: 1 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 harus memakai batas bilangan bulat aman.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: 'L', start: 1, end: 1_001 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 melebihi batas praktis 1000 nomor.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [
+          { prefix: 'L', start: 1, end: 1_000 },
+          { prefix: 'K', start: 1, end: 1_000 },
+          { prefix: 'M', start: 1, end: 1 },
+        ],
+      }),
+    ).toContain('Total nomor kavling melebihi batas praktis 2000 nomor.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: 'L', start: 1, end: 1, padTo: 13 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 memiliki panjang padding tidak valid.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [
+          { prefix: 'L', start: 1, end: 1, padTo: Number.MAX_SAFE_INTEGER + 1 },
+        ],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 memiliki panjang padding tidak valid.');
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        lotRanges: [{ prefix: 'L', start: 0, end: 1 }],
+      }),
+    ).toContain('Rentang nomor kavling ke-1 harus memakai nomor positif.');
+  });
+
+  it('reports blank event and prize identities plus duplicate prize IDs', () => {
+    expect(
+      validateEventConfig({
+        ...validConfig,
+        id: ' ',
+        title: ' ',
+        neighborhood: ' ',
+        prizes: [
+          { id: ' ', label: ' ' },
+          { id: 'hadiah-1', label: 'Hadiah A' },
+          { id: 'hadiah-1', label: 'Hadiah B' },
+        ],
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        'ID acara tidak boleh kosong.',
+        'Judul acara tidak boleh kosong.',
+        'Nama lingkungan tidak boleh kosong.',
+        'Hadiah ke-1 memiliki ID kosong.',
+        'Hadiah ke-1 memiliki label kosong.',
+        'ID hadiah duplikat: hadiah-1.',
+      ]),
     );
   });
 });
