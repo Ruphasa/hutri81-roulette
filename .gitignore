@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.superpowers/
+.impeccable/
+.gh-config/
+.gitconfig-codex
+coverage/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+HANDOFF.md
