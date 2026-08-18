@@ -220,7 +220,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       await handleDraw();
     } else if (currentUiPhase === 'REVEAL_WINNER' && !els.advanceBtn) {
       handleAdvance();
-      if (currentUiPhase === 'IDLE') {
+      if ((currentUiPhase as string) === 'IDLE') {
         await handleDraw();
       }
     }
