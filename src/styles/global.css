@@ -404,6 +404,48 @@ body {
   cursor: not-allowed;
 }
 
+.primary-actions {
+  display: flex;
+  gap: 1.5vw;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* Forfeit Button - Outlined */
+.forfeit-btn {
+  background: var(--color-black);
+  color: var(--color-crimson);
+  border: 2px solid var(--color-crimson);
+  padding: 0.5em 1.5em;
+  font-family: var(--font-heavy);
+  font-size: 1vw;
+  letter-spacing: 1px;
+  transform: skewX(-12deg);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, filter 0.1s ease, background 0.1s ease, color 0.1s ease;
+}
+
+.forfeit-btn:hover:not(:disabled) {
+  background: var(--color-crimson);
+  color: var(--color-white);
+  filter: brightness(1.1);
+  transform: skewX(-12deg) translateY(-2px);
+}
+
+.forfeit-btn:active:not(:disabled) {
+  transform: skewX(-12deg) translateY(1px);
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.8);
+}
+
+.forfeit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-arrow {
   font-size: 0.8em;
   line-height: 1;

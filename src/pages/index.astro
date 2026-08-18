@@ -113,11 +113,13 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     <div class="error-message" data-role="error" hidden style="position: absolute; top: 5%; right: 10%; color: var(--color-crimson); font-weight: bold; z-index: 15;"></div>
 
     <div class="bottom-right-controls">
-      <button class="skew-btn" data-role="spin-button">
-        PUTAR SEKARANG
-        <span class="btn-arrow" aria-hidden="true">&#9654;</span>
-      </button>
-      <button class="skew-btn-secondary" data-role="forfeit-button" hidden>HANGUS & UNDI ULANG</button>
+      <div class="primary-actions">
+        <button class="skew-btn" data-role="spin-button">
+          PUTAR SEKARANG
+          <span class="btn-arrow" aria-hidden="true">&#9654;</span>
+        </button>
+        <button class="forfeit-btn" data-role="forfeit-button" hidden>HANGUS & UNDI ULANG</button>
+      </div>
       <div class="btn-subtext">ENTER - MULAI UNDIAN</div>
     </div>
 
