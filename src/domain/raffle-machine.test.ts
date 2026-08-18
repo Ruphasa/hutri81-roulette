@@ -100,9 +100,17 @@ describe('raffle state transitions', () => {
     ).toThrow('Nomor kavling yang dipilih tidak aktif.');
   });
 
-  it('resets the supplied full pool and all event progress', () => {
+  it('rejects reset while a selected winner is pending', () => {
     const spinning = startDraw();
-    const reset = transition(spinning, { type: 'RESET', fullPool }, prizes);
+
+    expect(() => transition(spinning, { type: 'RESET', fullPool }, prizes)).toThrow(
+      'Pengaturan ulang tidak tersedia saat pengundian berlangsung.',
+    );
+  });
+
+  it('resets the supplied full pool and all event progress from a stable phase', () => {
+    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, prizes);
+    const reset = transition(winner, { type: 'RESET', fullPool }, prizes);
 
     expect(reset).toEqual({
       phase: 'idle',
@@ -111,6 +119,15 @@ describe('raffle state transitions', () => {
       prizeIndex: 0,
       pendingWinner: null,
     });
+  });
+
+  it('rejects an unknown runtime action explicitly', () => {
+    const initial = createInitialState(config, fullPool);
+    const unknownAction = { type: 'BOGUS' } as unknown as import('./types').RaffleAction;
+
+    expect(() => transition(initial, unknownAction, prizes)).toThrow(
+      'Aksi pengundian tidak dikenal: BOGUS.',
+    );
   });
 });
 
@@ -141,6 +158,83 @@ describe('stabilizeRestoredState', () => {
 
     expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
       'Data pengundian tersimpan tidak memiliki pemenang tertunda.',
+    );
+  });
+
+  it('rejects a stable phase that retains a pending winner', () => {
+    const spinning = startDraw();
+    const malformed: RaffleState = { ...spinning, phase: 'idle' };
+
+    expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
+      'Pemenang tertunda hanya diizinkan saat pengundian berlangsung.',
+    );
+  });
+
+  it('rejects out-of-range prize indexes for restored states', () => {
+    const malformed: RaffleState = { ...createInitialState(config, fullPool), prizeIndex: 2 };
+
+    expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
+      'Indeks hadiah tersimpan tidak valid.',
+    );
+  });
+
+  it('rejects restored pools and histories with duplicate or overlapping lots', () => {
+    const duplicateActiveLots: RaffleState = {
+      ...createInitialState(config, fullPool),
+      activeLots: ['L201', 'L201'],
+    };
+    const activeWinnerOverlap: RaffleState = {
+      ...createInitialState(config, fullPool),
+      winners: [{ lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt }],
+    };
+    const duplicateWinnerLots: RaffleState = {
+      ...createInitialState(config, ['L202', 'L203']),
+      winners: [
+        { lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt },
+        { lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt },
+      ],
+    };
+
+    expect(() => stabilizeRestoredState(duplicateActiveLots, prizes)).toThrow(
+      'Nomor kavling aktif tersimpan mengandung duplikat.',
+    );
+    expect(() => stabilizeRestoredState(activeWinnerOverlap, prizes)).toThrow(
+      'Nomor kavling pemenang masih aktif.',
+    );
+    expect(() => stabilizeRestoredState(duplicateWinnerLots, prizes)).toThrow(
+      'Riwayat pemenang tersimpan mengandung nomor kavling duplikat.',
+    );
+  });
+
+  it('rejects a pending winner that was not removed or does not match the active prize', () => {
+    const spinning = startDraw();
+    const pendingWinner = spinning.pendingWinner;
+
+    if (pendingWinner === null) {
+      throw new Error('Fixture pengundian tidak memiliki pemenang tertunda.');
+    }
+
+    const activePendingLot: RaffleState = {
+      ...spinning,
+      activeLots: [...spinning.activeLots, pendingWinner.lotId],
+    };
+    const wrongPendingPrize: RaffleState = {
+      ...spinning,
+      pendingWinner: { ...pendingWinner, prizeId: 'hadiah-2', prizeLabel: 'Hadiah ke-2' },
+    };
+    const pendingAlreadyWon: RaffleState = {
+      ...spinning,
+      winners: [pendingWinner],
+    };
+
+    expect(() => stabilizeRestoredState(activePendingLot, prizes)).toThrow(
+      'Pemenang tertunda masih aktif.',
+    );
+    expect(() => stabilizeRestoredState(wrongPendingPrize, prizes)).toThrow(
+      'Pemenang tertunda tidak cocok dengan hadiah saat ini.',
+    );
+    expect(() => stabilizeRestoredState(pendingAlreadyWon, prizes)).toThrow(
+      'Pemenang tertunda sudah tercatat sebagai pemenang.',
     );
   });
 });

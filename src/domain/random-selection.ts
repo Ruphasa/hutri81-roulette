@@ -1,4 +1,5 @@
 const UINT32_RANGE = 2 ** 32;
+const MAX_REJECTION_ATTEMPTS = 128;
 
 type NextUint32 = () => number;
 
@@ -29,15 +30,22 @@ export function randomIndex(length: number, nextUint32: NextUint32 = cryptoUint3
     throw new Error('Panjang kumpulan harus lebih dari nol.');
   }
 
+  if (length > UINT32_RANGE) {
+    throw new Error('Panjang kumpulan melebihi rentang uint32.');
+  }
+
   const limit = UINT32_RANGE - (UINT32_RANGE % length);
-  let value: number;
 
-  do {
-    value = nextUint32();
+  for (let attempt = 0; attempt < MAX_REJECTION_ATTEMPTS; attempt += 1) {
+    const value = nextUint32();
     assertUint32(value);
-  } while (value >= limit);
 
-  return value % length;
+    if (value < limit) {
+      return value % length;
+    }
+  }
+
+  throw new Error('Sumber acak terlalu sering menghasilkan nilai yang ditolak.');
 }
 
 export function selectWinner(activeLots: readonly string[], nextUint32?: NextUint32): string {

@@ -11,6 +11,7 @@ describe('randomIndex', () => {
     expect(() => randomIndex(0)).toThrow('Panjang kumpulan harus lebih dari nol');
     expect(() => randomIndex(-1)).toThrow('Panjang kumpulan harus lebih dari nol');
     expect(() => randomIndex(1.5)).toThrow('Panjang kumpulan harus lebih dari nol');
+    expect(() => randomIndex(2 ** 32 + 1)).toThrow('Panjang kumpulan melebihi rentang uint32.');
   });
 
   it('uses injected values deterministically and rejects modulo-biased values', () => {
@@ -18,6 +19,18 @@ describe('randomIndex', () => {
     const next = () => values.shift() ?? 0;
 
     expect(randomIndex(10, next)).toBe(7);
+  });
+
+  it('stops after a finite number of rejected values without biased fallback', () => {
+    let attempts = 0;
+
+    expect(() =>
+      randomIndex(10, () => {
+        attempts += 1;
+        return 4_294_967_295;
+      }),
+    ).toThrow('Sumber acak terlalu sering menghasilkan nilai yang ditolak.');
+    expect(attempts).toBe(128);
   });
 });
 
