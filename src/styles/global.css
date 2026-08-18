@@ -40,8 +40,7 @@ body {
 .stage-container {
   position: relative;
   width: 100vw;
-  max-width: calc(100vh * (16 / 9));
-  aspect-ratio: 16 / 9;
+  height: 100vh;
   background: var(--color-black);
   overflow: hidden;
 }
@@ -169,7 +168,7 @@ body {
 /* Ransom Note Title */
 .ransom-title {
   position: absolute;
-  top: 18%;
+  top: 15%;
   right: 14%;
   display: flex;
   flex-direction: column;
@@ -239,7 +238,7 @@ body {
 /* Middle Right Text */
 .middle-right-text {
   position: absolute;
-  top: 52%;
+  top: 55%;
   right: 14%;
   background: var(--color-black);
   color: var(--color-white);
@@ -302,14 +301,14 @@ body {
   transform: translate(-50%, -50%);
   background: var(--color-cream);
   clip-path: polygon(
-    14px 0,
-    calc(100% - 14px) 0,
-    100% 14px,
-    100% calc(100% - 14px),
-    calc(100% - 14px) 100%,
-    14px 100%,
-    0 calc(100% - 14px),
-    0 14px
+    2vw 0,
+    calc(100% - 2vw) 0,
+    100% 2vw,
+    100% calc(100% - 2vw),
+    calc(100% - 2vw) 100%,
+    2vw 100%,
+    0 calc(100% - 2vw),
+    0 2vw
   );
   padding: 1.2vh 2.4vw;
   display: flex;
@@ -317,7 +316,7 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-width: 13.5vw;
+  min-width: 15vw;
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
   z-index: 5;
 }
@@ -325,17 +324,17 @@ body {
 .wheel-center-badge::before {
   content: '';
   position: absolute;
-  inset: 3px;
-  border: 1.5px solid var(--color-gold);
+  inset: 4px;
+  border: 2px solid var(--color-gold);
   clip-path: polygon(
-    12px 0,
-    calc(100% - 12px) 0,
-    100% 12px,
-    100% calc(100% - 12px),
-    calc(100% - 12px) 100%,
-    12px 100%,
-    0 calc(100% - 12px),
-    0 12px
+    1.8vw 0,
+    calc(100% - 1.8vw) 0,
+    100% 1.8vw,
+    100% calc(100% - 1.8vw),
+    calc(100% - 1.8vw) 100%,
+    1.8vw 100%,
+    0 calc(100% - 1.8vw),
+    0 1.8vw
   );
   pointer-events: none;
 }
@@ -371,27 +370,14 @@ body {
 
 .diamond-pointer {
   position: absolute;
-  top: -16px;
+  top: -10px;
   left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 38px;
-  height: 38px;
-  background: var(--color-white);
-  border: 2.5px solid var(--color-black);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transform: translateX(-50%);
+  width: 5vw;
+  height: 5vw;
   z-index: 6;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   pointer-events: none;
-}
-
-.diamond-pointer::after {
-  content: '';
-  width: 18px;
-  height: 18px;
-  background: var(--color-cream);
-  border: 1.5px solid var(--color-black);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
 }
 
 /* Bottom Right Controls */
@@ -411,7 +397,7 @@ body {
   border: none;
   padding: 0.5em 2em;
   font-family: var(--font-heavy);
-  font-size: 1.9vw;
+  font-size: 1.4vw;
   letter-spacing: 1px;
   transform: skewX(-12deg);
   cursor: pointer;

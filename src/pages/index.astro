@@ -75,7 +75,10 @@ import OfflineStatus from '../components/OfflineStatus.astro';
           <div class="badge-value" data-role="winner-display">???</div>
           <div class="badge-footer">PEMENANG</div>
         </div>
-        <div class="diamond-pointer"></div>
+        <svg class="diamond-pointer" viewBox="0 0 100 100">
+          <polygon points="10,0 90,0 50,70" fill="var(--color-white)" stroke="var(--color-black)" stroke-width="4"/>
+          <polygon points="30,0 70,0 50,35" fill="var(--color-cream)" stroke="var(--color-black)" stroke-width="2"/>
+        </svg>
       </div>
 
       <div class="bottom-left-text">sekali putar, satu pemenang!</div>
