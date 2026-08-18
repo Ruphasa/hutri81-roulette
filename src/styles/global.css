@@ -197,7 +197,7 @@ body {
 .block-2 {
   background: var(--color-gold);
   color: var(--color-black);
-  font-family: 'Britannic Bold', var(--font-heavy), sans-serif;
+  font-family: var(--font-deco);
   font-size: 4vw;
   transform: rotate(3deg);
   margin-left: -1vw;
