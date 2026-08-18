@@ -23,8 +23,6 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
   const { wheel, readout, activeLots, winner, reducedMotion, durationMs = 4000 } = options;
   const duration = reducedMotion ? 50 : durationMs;
 
-  let interval: ReturnType<typeof setInterval> | undefined;
-
   try {
     if (reducedMotion) {
       if (wheel) {
@@ -49,7 +47,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
           if (i >= totalTicks) {
             sequence.push(winner);
           } else {
-            sequence.push(activeLots[Math.floor(Math.random() * activeLots.length)]);
+            sequence.push(activeLots.length > 0 ? activeLots[Math.floor(Math.random() * activeLots.length)] : winner);
           }
         }
         
@@ -98,8 +96,6 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
       }
     }
   } finally {
-    if (interval) clearInterval(interval);
     if (readout) readout.textContent = winner;
   }
 }
-
