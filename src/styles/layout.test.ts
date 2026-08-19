@@ -23,10 +23,11 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toContain("--font-condensed: 'Barlow Condensed', sans-serif;");
   });
 
-  it('configures 16:9 stage-container styling in global.css', () => {
+  it('configures true fullscreen 100% stage-container styling in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
-    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*aspect-ratio:\s*16\s*\/\s*9;/);
-    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*max-width:\s*calc\(100vh\s*\*\s*\(16\s*\/\s*9\)\);/);
+    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*width:\s*100vw;/);
+    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*height:\s*100vh;/);
+    expect(css).toMatch(/\.stage-container\s*\{[\s\S]*max-width:\s*none;/);
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*background:\s*(#0F1012|var\(--color-black\));/);
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*overflow:\s*hidden;/);
   });
@@ -34,11 +35,11 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
   it('configures Stage Mode 70/30 split dimensions in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*70vw;/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100vh;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*70%;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*30vw;/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100vh;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*30%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
   });
 
   it('includes sunburst svg lines in .bg-cream-split in index.astro and global.css', () => {
@@ -84,6 +85,45 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*transform:\s*rotate\(45deg\);/);
     expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*cursor:\s*pointer;/);
     expect(css).toMatch(/\.top-left-diamond:hover\s*\{[\s\S]*filter:\s*drop-shadow/);
+  });
+
+  it('configures round badge in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="round-badge"');
+    expect(astro).toContain('data-role="round-badge"');
+    expect(astro).toContain('BABAK HADIAH HIBURAN');
+
+    expect(css).toContain('.round-badge');
+    expect(css).toMatch(/\.round-badge\s*\{[\s\S]*transform:\s*skewX\(-/);
+    expect(css).toContain('.round-badge.gold');
+    expect(css).toMatch(/\.round-badge\.gold\s*\{[\s\S]*background:\s*var\(--color-gold\);/);
+  });
+
+  it('configures switch round button in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('class="switch-round-btn"');
+    expect(astro).toContain('data-role="switch-round-button"');
+
+    expect(css).toContain('.switch-round-btn');
+    expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*background:\s*var\(--color-gold\);/);
+    expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*transform:\s*skewX\(-/);
+  });
+
+  it('configures intermission modal dialog in global.css and index.astro', () => {
+    const astro = fs.readFileSync(indexAstroPath, 'utf-8');
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+
+    expect(astro).toContain('data-role="intermission-dialog"');
+    expect(astro).toContain('data-role="intermission-winners"');
+    expect(astro).toContain('data-role="start-main-round-btn"');
+
+    expect(css).toContain('.intermission-dialog');
+    expect(css).toMatch(/\.intermission-dialog\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
+    expect(css).toContain('.intermission-winners-list');
   });
 
   it('configures top-right stats badges and mute button in global.css and index.astro', () => {
@@ -176,6 +216,9 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toContain('.finale-overlay');
     expect(css).toContain('.finale-title');
     expect(css).toContain('.finale-winners-list');
+    expect(css).toContain('.finale-columns');
+    expect(css).toContain('.finale-column');
+    expect(css).toContain('.finale-actions');
   });
 
   it('includes diagonal split elements inside .stage-container in index.astro', () => {
@@ -223,6 +266,15 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
     expect(astro).toContain('data-role="spin-button"');
     expect(astro).toContain('data-role="forfeit-button"');
+    expect(astro).toContain('data-role="switch-round-button"');
+    expect(astro).toContain('data-role="intermission-dialog"');
+    expect(astro).toContain('data-role="intermission-winners"');
+    expect(astro).toContain('data-role="start-main-round-btn"');
+    expect(astro).toContain('data-role="finale-small-winners"');
+    expect(astro).toContain('data-role="finale-main-winners"');
+    expect(astro).toContain('data-role="finale-reset-btn"');
+    expect(astro).toContain('data-role="finale-close-btn"');
+    expect(astro).toContain('data-role="round-badge"');
     expect(astro).toContain('data-role="reset-button"');
     expect(astro).toContain('data-role="secret-reset"');
     expect(astro).toContain('data-role="mute-button"');

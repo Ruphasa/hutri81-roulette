@@ -41,8 +41,7 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
-  aspect-ratio: 16 / 9;
-  max-width: calc(100vh * (16 / 9));
+  max-width: none;
   background: var(--color-black);
   overflow: hidden;
 }
@@ -52,8 +51,8 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 70vw;
-  height: 100vh;
+  width: 70%;
+  height: 100%;
   background: var(--color-crimson);
   display: flex;
   flex-direction: column;
@@ -66,8 +65,8 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  width: 30vw;
-  height: 100vh;
+  width: 30%;
+  height: 100%;
   background: var(--color-cream);
   z-index: 2;
   overflow: hidden;
@@ -200,6 +199,30 @@ body {
 
 .mute-toggle-btn:hover {
   filter: brightness(1.2);
+}
+
+/* Round Badge */
+.round-badge {
+  background: var(--color-crimson);
+  color: var(--color-white);
+  font-family: var(--font-heavy);
+  font-size: 1vw;
+  letter-spacing: 1px;
+  padding: 0.35em 1.2em;
+  transform: skewX(-15deg);
+  border: 1.5px solid var(--color-gold);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.round-badge.gold {
+  background: var(--color-gold);
+  color: var(--color-black);
+  border-color: var(--color-crimson);
+  box-shadow: 0 0 12px rgba(193, 159, 72, 0.6), 2px 2px 0px rgba(0, 0, 0, 0.5);
 }
 
 /* Ransom Note Title */
@@ -477,6 +500,39 @@ body {
   cursor: not-allowed;
 }
 
+/* Switch Round Button */
+.switch-round-btn {
+  background: var(--color-gold);
+  color: var(--color-black);
+  border: 2px solid var(--color-black);
+  padding: 0.5em 1.5em;
+  font-family: var(--font-heavy);
+  font-size: 1vw;
+  letter-spacing: 1px;
+  transform: skewX(-12deg);
+  cursor: pointer;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, filter 0.1s ease, background 0.1s ease;
+}
+
+.switch-round-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: skewX(-12deg) translateY(-2px);
+}
+
+.switch-round-btn:active:not(:disabled) {
+  transform: skewX(-12deg) translateY(1px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+}
+
+.switch-round-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-arrow {
   font-size: 0.8em;
   line-height: 1;
@@ -539,6 +595,70 @@ body {
   opacity: 0.8;
 }
 
+/* Intermission Modal Dialog */
+.intermission-dialog {
+  background: var(--color-cream);
+  border: 4px solid var(--color-gold);
+  border-radius: 8px;
+  padding: 3vh 3vw;
+  max-width: 60vw;
+  width: 90%;
+  max-height: 80vh;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  z-index: 110;
+  color: var(--color-black);
+}
+
+.intermission-dialog::backdrop {
+  background: rgba(15, 16, 18, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.intermission-title {
+  font-family: var(--font-heavy);
+  font-size: min(2.4vw, 4.5vh);
+  color: var(--color-crimson);
+  margin-top: 0;
+  margin-bottom: 1vh;
+  letter-spacing: 1px;
+}
+
+.intermission-desc {
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: min(1.2vw, 2.4vh);
+  color: var(--color-black);
+  margin-bottom: 1.5vh;
+}
+
+.intermission-winners-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1vw;
+  max-height: 35vh;
+  overflow-y: auto;
+  padding: 1vh 1vw;
+  margin-bottom: 2vh;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px dashed var(--color-gold);
+  border-radius: 4px;
+}
+
+.intermission-notice {
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: min(1.1vw, 2.2vh);
+  color: var(--color-crimson);
+  margin-bottom: 2vh;
+}
+
+.intermission-actions {
+  display: flex;
+  justify-content: center;
+}
+
 /* Red Flash Vignette for Forfeit */
 .forfeit-flash {
   position: fixed;
@@ -575,7 +695,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4vh 6vw;
+  padding: 3vh 4vw;
   text-align: center;
   color: var(--color-white);
   animation: finaleFadeIn 0.5s ease-out;
@@ -594,36 +714,65 @@ body {
 
 .finale-title {
   font-family: var(--font-heavy);
-  font-size: min(4vw, 8vh);
+  font-size: min(3.5vw, 6.5vh);
   color: var(--color-gold);
-  margin-bottom: 2vh;
+  margin-bottom: 1vh;
   text-shadow: 0 4px 20px rgba(193, 159, 72, 0.4);
   letter-spacing: 2px;
 }
 
 .finale-subtitle {
   font-family: var(--font-deco);
-  font-size: min(2.5vw, 5vh);
+  font-size: min(2vw, 4vh);
   color: var(--color-cream);
-  margin-bottom: 3vh;
+  margin-bottom: 2vh;
+}
+
+.finale-columns {
+  display: flex;
+  gap: 2vw;
+  width: 100%;
+  max-width: 85vw;
+  max-height: 48vh;
+  margin-bottom: 2vh;
+}
+
+.finale-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-gold);
+  border-radius: 6px;
+  padding: 1.5vh 1.5vw;
+  overflow: hidden;
+}
+
+.finale-column-title {
+  font-family: var(--font-heavy);
+  font-size: min(1.4vw, 2.8vh);
+  color: var(--color-gold);
+  margin-top: 0;
+  margin-bottom: 1vh;
+  letter-spacing: 1px;
 }
 
 .finale-winners-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.5vw;
-  max-width: 80vw;
-  max-height: 45vh;
+  gap: 1vw;
+  max-width: 100%;
+  max-height: 38vh;
   overflow-y: auto;
-  margin-bottom: 3vh;
-  padding: 1vh 1vw;
+  margin-bottom: 0;
+  padding: 0.5vh 0.5vw;
 }
 
 .finale-winner-card {
   background: var(--color-crimson);
   border: 2px solid var(--color-gold);
-  padding: 1.5vh 2vw;
+  padding: 1vh 1.5vw;
   border-radius: 4px;
   transform: skewX(-6deg);
   box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
@@ -631,20 +780,28 @@ body {
 
 .finale-winner-lot {
   font-family: var(--font-heavy);
-  font-size: min(3vw, 6vh);
+  font-size: min(2.4vw, 4.8vh);
   color: var(--color-white);
 }
 
 .finale-winner-prize {
   font-family: var(--font-condensed);
   font-weight: bold;
-  font-size: min(1.2vw, 2.5vh);
+  font-size: min(1.1vw, 2.2vh);
   color: var(--color-cream);
+}
+
+.finale-actions {
+  display: flex;
+  gap: 1.5vw;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5vh;
 }
 
 .finale-greeting {
   font-family: var(--font-heavy);
-  font-size: min(1.6vw, 3.2vh);
+  font-size: min(1.4vw, 2.6vh);
   color: var(--color-gold);
   letter-spacing: 1px;
 }

@@ -118,12 +118,17 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
 
     // Prize Position
-    if (els.prizePosition && state.prizeIndex < config.prizes.length) {
-      const p = config.prizes[state.prizeIndex];
-      els.prizePosition.textContent = p?.label || '';
+    if (els.prizePosition) {
+      if (state.round === 'small') {
+        els.prizePosition.textContent = `Hadiah Hiburan #${state.smallPrizeCount + 1}`;
+      } else {
+        const p = config.prizes[state.mainPrizeIndex];
+        els.prizePosition.textContent = p?.label || '';
+      }
     }
 
     // Buttons
+    const isLastMainPrize = state.round === 'main' && state.mainPrizeIndex >= config.prizes.length - 1;
     if (els.drawBtn) {
       if (els.advanceBtn) {
         els.drawBtn.disabled = currentUiPhase !== 'IDLE';
@@ -144,7 +149,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
           els.drawBtn.hidden = false;
           if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         } else if (currentUiPhase === 'REVEAL_WINNER') {
-          els.drawBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'LIHAT SEMUA PEMENANG' : 'LANJUT & PUTAR';
+          els.drawBtn.textContent = isLastMainPrize ? 'LIHAT SEMUA PEMENANG' : 'LANJUT & PUTAR';
           els.drawBtn.disabled = false;
           els.drawBtn.hidden = false;
           if (els.forfeitBtn) {
@@ -163,7 +168,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     if (els.advanceBtn) {
       els.advanceBtn.disabled = currentUiPhase !== 'REVEAL_WINNER';
       els.advanceBtn.hidden = currentUiPhase !== 'REVEAL_WINNER' && currentUiPhase !== 'COMPLETE';
-      els.advanceBtn.textContent = state.prizeIndex >= config.prizes.length - 1 ? 'Lihat Semua Pemenang' : 'Lanjut Hadiah Berikutnya';
+      els.advanceBtn.textContent = isLastMainPrize ? 'Lihat Semua Pemenang' : 'Lanjut Hadiah Berikutnya';
     }
 
     if (els.resetBtn) {
