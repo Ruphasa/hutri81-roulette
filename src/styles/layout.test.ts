@@ -38,14 +38,14 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*position:\s*absolute;/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*53%\s+0,\s*48%\s+100%,\s*0\s+100%\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*68%\s+0,\s*62%\s+100%,\s*0\s+100%\);/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*z-index:\s*1;/);
 
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*position:\s*absolute;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(70%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*55%\s+100%\);/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(78%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*65%\s+100%\);/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*z-index:\s*2;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*overflow:\s*hidden;/);
   });
@@ -62,6 +62,8 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.ransom-title');
     expect(css).toMatch(/\.ransom-title\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.ransom-title\s*\{[\s\S]*right:\s*3%;/);
+    expect(css).toMatch(/\.ransom-title\s*\{[\s\S]*top:\s*16%;/);
     expect(css).toMatch(/\.ransom-title\s+\.word\s*\{[\s\S]*font-family:\s*var\(--font-heavy\);/);
     
     // Block 1: White text on Black bg, tilted left
@@ -169,6 +171,7 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(astro).toContain('NOMOR KAVLING MALAM INI.');
 
     expect(css).toContain('.middle-right-text');
+    expect(css).toMatch(/\.middle-right-text\s*\{[\s\S]*right:\s*3%;/);
     expect(css).toMatch(/\.middle-right-text\s+\.highlight\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
   });
 
@@ -191,6 +194,9 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(astro).toContain('ENTER - MULAI UNDIAN');
     expect(astro).toContain('class="bottom-right-diamond"');
 
+    expect(css).toContain('.bottom-right-controls');
+    expect(css).toMatch(/\.bottom-right-controls\s*\{[\s\S]*right:\s*3%;/);
+    expect(css).toMatch(/\.bottom-right-controls\s*\{[\s\S]*bottom:\s*6%;/);
     expect(css).toContain('.skew-btn');
     expect(css).toContain('.bottom-right-diamond');
     expect(css).toMatch(/\.bottom-right-diamond\s*\{[\s\S]*border:\s*3px\s+solid\s+var\(--color-crimson\);/);
@@ -201,11 +207,11 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.wheel-wrapper');
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*position:\s*absolute;/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*left:\s*8%;/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*left:\s*5%;/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*top:\s*50%;/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*transform:\s*translateY\(-50%\);/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(58vw,\s*75vh\);/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*height:\s*min\(58vw,\s*75vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(62vw,\s*84vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*height:\s*min\(62vw,\s*84vh\);/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*z-index:\s*4;/);
     expect(css).toContain('.wheel-svg');
     expect(css).toContain('.wheel-center-badge');
@@ -213,12 +219,22 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
     expect(css).toContain('.badge-label');
     expect(css).toContain('.badge-value');
-    expect(css).toMatch(/\.wheel-center-badge\s+\.badge-value\s*\{[\s\S]*font-size:\s*min\(8vw,\s*16vh\);/);
+    expect(css).toMatch(/\.wheel-center-badge\s+\.badge-value\s*\{[\s\S]*font-size:\s*min\(8\.5vw,\s*17vh\);/);
     expect(css).toContain('.badge-footer');
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*background:\s*var\(--color-black\);/);
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*color:\s*var\(--color-white\);/);
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*transform:\s*skewX\(-/);
     expect(css).toContain('.diamond-pointer');
+  });
+
+  it('configures custom gold scrollbars for intermission and finale winners lists in global.css', () => {
+    const css = fs.readFileSync(globalCssPath, 'utf-8');
+    expect(css).toContain('::-webkit-scrollbar');
+    expect(css).toContain('width: 8px;');
+    expect(css).toContain('background: rgba(0, 0, 0, 0.4);');
+    expect(css).toContain('border: 1px solid var(--color-gold);');
+    expect(css).toContain('background: var(--color-gold);');
+    expect(css).toContain('background: var(--color-cream);');
   });
 
   it('configures forfeit flash, confetti canvas, and grand finale overlay in global.css', () => {
