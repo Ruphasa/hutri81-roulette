@@ -890,7 +890,10 @@ describe('Raffle Controller Two-Round Flow & Intermission Integration', () => {
     expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
     expect(deps.soundEngine?.playLockImpact).toHaveBeenCalledTimes(1);
     expect(deps.soundEngine?.playFanfare).toHaveBeenCalledTimes(1);
-    expect(deps.confetti?.fire).toHaveBeenCalledWith({ count: 90 });
+    expect(deps.confetti?.fire).toHaveBeenCalledWith({
+      count: 90,
+      originEl: root.querySelector('[data-role="wheel"]'),
+    });
   });
 
   it('passes onTick callback to animateRoulette forwarding to soundEngine', async () => {

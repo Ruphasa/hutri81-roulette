@@ -160,4 +160,82 @@ describe('ConfettiManager', () => {
     expect(() => confetti.stop()).not.toThrow();
     expect(mockCtx.clearRect).toHaveBeenCalled();
   });
+
+  it('spawns flanked cannons relative to originEl bounding box when provided', () => {
+    // Set up canvas rect: 0, 0, 1000, 600
+    canvas.getBoundingClientRect = vi.fn().mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 1000,
+      bottom: 600,
+      width: 1000,
+      height: 600,
+    });
+
+    const originEl = document.createElement('div');
+    // Wheel element rect: left 300, top 100, right 700, bottom 500, width 400, height 400
+    originEl.getBoundingClientRect = vi.fn().mockReturnValue({
+      left: 300,
+      top: 100,
+      right: 700,
+      bottom: 500,
+      width: 400,
+      height: 400,
+    });
+
+    const confetti = createConfetti(canvas);
+    confetti.fire({ count: 2, originEl });
+
+    expect(rafCallbacks.length).toBe(1);
+    const step = rafCallbacks.shift()!;
+    step(16);
+
+    // Left cannon: x = 300 + 400 * 0.05 = 320, y = 500 - 400 * 0.1 = 460
+    // Right cannon: x = 700 - 400 * 0.05 = 680, y = 500 - 400 * 0.1 = 460
+    // Particles move by vx, vy in first frame
+    const calls = mockCtx.translate.mock.calls;
+    expect(calls.length).toBe(2);
+
+    const [leftX, leftY] = calls[0];
+    const [rightX, rightY] = calls[1];
+
+    // Left particle should have spawned near 320 and moved right (leftX > 320) and up (leftY < 460)
+    expect(leftX).toBeGreaterThan(320);
+    expect(leftY).toBeLessThan(460);
+
+    // Right particle should have spawned near 680 and moved left (rightX < 680) and up (rightY < 460)
+    expect(rightX).toBeLessThan(680);
+    expect(rightY).toBeLessThan(460);
+  });
+
+  it('falls back to 20% and 80% canvas width when originEl is null or omitted', () => {
+    canvas.getBoundingClientRect = vi.fn().mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 1000,
+      bottom: 600,
+      width: 1000,
+      height: 600,
+    });
+
+    const confetti = createConfetti(canvas);
+    confetti.fire({ count: 2, originEl: null });
+
+    const step = rafCallbacks.shift()!;
+    step(16);
+
+    const calls = mockCtx.translate.mock.calls;
+    expect(calls.length).toBe(2);
+
+    const [leftX, leftY] = calls[0];
+    const [rightX, rightY] = calls[1];
+
+    // Left particle: spawned at canvas.width * 0.2, y at canvas.height * 0.85, moved right (vx > 0) and up (vy < 0)
+    expect(leftX).toBeGreaterThan(canvas.width * 0.2);
+    expect(leftY).toBeLessThan(canvas.height * 0.85);
+
+    // Right particle: spawned at canvas.width * 0.8, y at canvas.height * 0.85, moved left (vx < 0) and up (vy < 0)
+    expect(rightX).toBeLessThan(canvas.width * 0.8);
+    expect(rightY).toBeLessThan(canvas.height * 0.85);
+  });
 });

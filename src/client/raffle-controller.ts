@@ -325,7 +325,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     if (saveAndRender()) {
       soundEngine.playLockImpact();
       soundEngine.playFanfare();
-      confetti.fire({ count: 90 });
+      confetti.fire({ count: 90, originEl: els.wheel });
     }
   }
 

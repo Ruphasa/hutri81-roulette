@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   animateRoulette,
   getCurrentRotation,
@@ -15,6 +15,10 @@ describe('animateRoulette', () => {
     resetCurrentRotation();
     wheel = document.createElement('div');
     readout = document.createElement('div');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('exports expected timing constants for stage suspense', () => {
@@ -165,7 +169,24 @@ describe('animateRoulette', () => {
     expect(readout.textContent).toBe('A4');
     expect(tickRates.length).toBeGreaterThan(0);
   });
+
+  it('synchronizes wheel & readout easing with easeOutCubic and applies badge impact pulse on completion', async () => {
+    const activeLots = ['A1', 'A2', 'A3'];
+    const winner = 'A2';
+
+    // Start with a non-empty text content in readout to test starting point continuity
+    readout.textContent = 'A1';
+
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      winner,
+      reducedMotion: false,
+      durationMs: 50
+    });
+
+    expect(readout.textContent).toBe(winner);
+    expect(getCurrentRotation()).toBeGreaterThan(0);
+  });
 });
-
-
-

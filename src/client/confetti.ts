@@ -1,5 +1,10 @@
+export interface ConfettiFireOptions {
+  count?: number;
+  originEl?: HTMLElement | null;
+}
+
 export interface ConfettiManager {
-  fire(options?: { count?: number }): void;
+  fire(options?: ConfettiFireOptions): void;
   stop(): void;
 }
 
@@ -78,17 +83,38 @@ export function createConfetti(canvas: HTMLCanvasElement): ConfettiManager {
   }
 
   return {
-    fire(options?: { count?: number }): void {
+    fire(options?: ConfettiFireOptions): void {
       resize();
       const count = options?.count ?? 80;
 
-      // Spawn two bursts: left (20% x) and right (80% x)
+      let leftOriginX = canvas.width * 0.2;
+      let leftOriginY = canvas.height * 0.85;
+      let rightOriginX = canvas.width * 0.8;
+      let rightOriginY = canvas.height * 0.85;
+
+      if (options?.originEl) {
+        const elRect = options.originEl.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        const rect = {
+          left: elRect.left - canvasRect.left,
+          right: elRect.right - canvasRect.left,
+          top: elRect.top - canvasRect.top,
+          bottom: elRect.bottom - canvasRect.top,
+          width: elRect.width,
+          height: elRect.height,
+        };
+        leftOriginX = rect.left + rect.width * 0.05;
+        leftOriginY = rect.bottom - rect.height * 0.1;
+        rightOriginX = rect.right - rect.width * 0.05;
+        rightOriginY = rect.bottom - rect.height * 0.1;
+      }
+
       for (let i = 0; i < count; i++) {
         const fromLeft = i % 2 === 0;
         particles.push({
-          x: fromLeft ? canvas.width * 0.2 : canvas.width * 0.8,
-          y: canvas.height * 0.85,
-          vx: (fromLeft ? 1 : -1) * (Math.random() * 12 + 4) + (Math.random() - 0.5) * 6,
+          x: fromLeft ? leftOriginX : rightOriginX,
+          y: fromLeft ? leftOriginY : rightOriginY,
+          vx: fromLeft ? Math.random() * 8 + 4 : -(Math.random() * 8 + 4),
           vy: -(Math.random() * 16 + 10),
           size: Math.random() * 10 + 6,
           color: COLORS[Math.floor(Math.random() * COLORS.length)] || '#facc15',

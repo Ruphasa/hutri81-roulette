@@ -44,10 +44,16 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         anime.remove(wheel);
         wheel.style.transform = 'rotate(0deg)';
       }
+      if (readout) {
+        anime.remove(readout);
+      }
       await new Promise(resolve => setTimeout(resolve, duration));
     } else {
       if (wheel) {
         anime.remove(wheel);
+        if (readout) {
+          anime.remove(readout);
+        }
         // 1. "init" - start exactly from the currently displayed text
         const startLot = readout?.textContent?.trim() || '';
         let startIndex = pool.indexOf(startLot);
@@ -83,8 +89,6 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         const sequence: string[] = [];
         
         // Build the perfectly sequential pre-rolled sequence
-        // We need to generate enough elements to cover the elastic overshoot.
-        // easeOutElastic can overshoot by ~15-20%, so we generate up to totalTicks * 1.5
         const maxTick = Math.ceil(totalTicks * 1.5) + 50;
         for (let i = 0; i <= maxTick; i++) {
           if (pool.length > 0) {
@@ -95,9 +99,8 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
           }
         }
         
-        // Text proxy uses MONOTONIC easing (easeOutCubic) — it only goes forward,
-        // slowing down naturally. Never bounces backward like elastic would.
-        // The wheel visual gets the dramatic elastic bounce separately.
+        // Text proxy and wheel both use monotonic easeOutCubic to decelerate
+        // simultaneously and click-stop at the exact same millisecond on the winner.
         if ((activeLots.length > 0 || pool.length > 0) && (readout || onTick)) {
           anime({
             targets: proxy,
@@ -123,7 +126,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
             targets: wheel,
             rotate: targetAngle,
             duration: duration,
-            easing: 'easeOutElastic(1, .75)', // Dramatic Persona 5 bounce
+            easing: 'easeOutCubic',
             complete: () => {
               currentRotation = targetAngle;
               resolve();
@@ -135,10 +138,9 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
       if (readout) {
         anime({
           targets: readout,
-          scale: [0, 1.2, 1],
-          opacity: [0, 1],
-          duration: 800,
-          easing: 'easeOutElastic(1, .5)'
+          scale: [1, 1.25, 1],
+          duration: 450,
+          easing: 'easeOutBack'
         });
       }
     }
