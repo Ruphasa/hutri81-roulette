@@ -4,7 +4,7 @@ import fs from 'node:fs';
 // @ts-ignore
 import path from 'node:path';
 
-describe('Global Styles and 16:9 Layout', () => {
+describe('Global Styles and Stage Mode 70/30 Layout', () => {
   // @ts-ignore
   const globalCssPath = path.resolve(process.cwd(), 'src/styles/global.css');
   // @ts-ignore
@@ -31,16 +31,14 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*overflow:\s*hidden;/);
   });
 
-  it('configures diagonal split background classes in global.css', () => {
+  it('configures Stage Mode 70/30 split dimensions in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*53%\s+0,\s*48%\s+100%,\s*0\s+100%\);/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*100%;/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*70vw;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100vh;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(70%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*55%\s+100%\);/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*100%;/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*30vw;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100vh;/);
   });
 
   it('includes sunburst svg lines in .bg-cream-split in index.astro and global.css', () => {
@@ -67,13 +65,14 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toMatch(/\.block-3\s*\{[\s\S]*background:\s*var\(--color-crimson\);[\s\S]*color:\s*var\(--color-white\);[\s\S]*transform:\s*rotate\(-/);
   });
 
-  it('configures top-left badge and diamond in global.css and index.astro', () => {
+  it('configures top-left badge and secret reset diamond in global.css and index.astro', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
     const css = fs.readFileSync(globalCssPath, 'utf-8');
 
     expect(astro).toContain('class="top-left-badge"');
     expect(astro).toContain('GRIYA SHANTA &middot; RT 08');
     expect(astro).toContain('class="top-left-diamond"');
+    expect(astro).toContain('data-role="secret-reset"');
 
     expect(css).toContain('.top-left-badge');
     expect(css).toMatch(/\.top-left-badge\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
@@ -83,9 +82,11 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toContain('.top-left-diamond');
     expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*border:\s*2px\s+solid\s+var\(--color-gold\);/);
     expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*transform:\s*rotate\(45deg\);/);
+    expect(css).toMatch(/\.top-left-diamond\s*\{[\s\S]*cursor:\s*pointer;/);
+    expect(css).toMatch(/\.top-left-diamond:hover\s*\{[\s\S]*filter:\s*drop-shadow/);
   });
 
-  it('configures top-right stats badges in global.css and index.astro', () => {
+  it('configures top-right stats badges and mute button in global.css and index.astro', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
     const css = fs.readFileSync(globalCssPath, 'utf-8');
 
@@ -94,11 +95,15 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(astro).toContain('164 NOMOR TERSISA');
     expect(astro).toContain('class="stat-cream"');
     expect(astro).toContain('HADIAH 02/05');
+    expect(astro).toContain('class="mute-toggle-btn"');
+    expect(astro).toContain('data-role="mute-button"');
 
     expect(css).toContain('.top-right-stats');
     expect(css).toMatch(/\.stat-gold\s*\{[\s\S]*background:\s*var\(--color-gold\);/);
     expect(css).toMatch(/\.stat-gold\s*\{[\s\S]*color:\s*var\(--color-black\);/);
     expect(css).toContain('.stat-cream');
+    expect(css).toContain('.mute-toggle-btn');
+    expect(css).toMatch(/\.mute-toggle-btn\s*\{[\s\S]*cursor:\s*pointer;/);
   });
 
   it('configures middle-right text with highlight in global.css and index.astro', () => {
@@ -140,30 +145,37 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(css).toMatch(/\.bottom-right-diamond\s*\{[\s\S]*transform:\s*rotate\(45deg\);/);
   });
 
-  it('configures wheel wrapper, SVG wheel, center badge, and diamond pointer in global.css', () => {
+  it('configures wheel wrapper, SVG wheel, center badge hero typography, and diamond pointer in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.wheel-wrapper');
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(65vw,\s*85vh\);/);
     expect(css).toContain('.wheel-svg');
     expect(css).toContain('.wheel-center-badge');
     expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*clip-path:\s*polygon\(/);
     expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
     expect(css).toContain('.badge-label');
     expect(css).toContain('.badge-value');
-    expect(css).toMatch(/\.badge-value\s*\{[\s\S]*color:\s*var\(--color-crimson\);/);
+    expect(css).toMatch(/\.wheel-center-badge\s+\.badge-value\s*\{[\s\S]*font-size:\s*min\(8vw,\s*16vh\);/);
     expect(css).toContain('.badge-footer');
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*background:\s*var\(--color-black\);/);
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*color:\s*var\(--color-white\);/);
     expect(css).toMatch(/\.badge-footer\s*\{[\s\S]*transform:\s*skewX\(-/);
     expect(css).toContain('.diamond-pointer');
-    expect(css).toMatch(/\.diamond-pointer\s*\{[\s\S]*background:\s*var\(--color-white\);/);
-    expect(css).toMatch(/\.diamond-pointer::after\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
   });
 
-  it('configures skewed control buttons and status bar in global.css', () => {
+  it('configures forfeit flash, confetti canvas, and grand finale overlay in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
-    expect(css).toContain('.skew-btn');
-    expect(css).toContain('.skew-btn-secondary');
-    expect(css).toContain('.status-bar');
+    expect(css).toContain('.forfeit-flash');
+    expect(css).toMatch(/\.forfeit-flash\s*\{[\s\S]*position:\s*fixed;/);
+    expect(css).toMatch(/\.forfeit-flash\s*\{[\s\S]*pointer-events:\s*none;/);
+
+    expect(css).toContain('.confetti-canvas');
+    expect(css).toMatch(/\.confetti-canvas\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.confetti-canvas\s*\{[\s\S]*pointer-events:\s*none;/);
+
+    expect(css).toContain('.finale-overlay');
+    expect(css).toContain('.finale-title');
+    expect(css).toContain('.finale-winners-list');
   });
 
   it('includes diagonal split elements inside .stage-container in index.astro', () => {
@@ -207,13 +219,20 @@ describe('Global Styles and 16:9 Layout', () => {
     expect(astro).toContain('class="diamond-pointer"');
   });
 
-  it('includes control buttons and status bar with expected data-role attributes in index.astro', () => {
+  it('includes control buttons, fx elements, and reset dialog with expected data-role attributes in index.astro', () => {
     const astro = fs.readFileSync(indexAstroPath, 'utf-8');
-    expect(astro).toContain('data-role="status-message"');
     expect(astro).toContain('data-role="spin-button"');
+    expect(astro).toContain('data-role="forfeit-button"');
     expect(astro).toContain('data-role="reset-button"');
-    expect(astro).toContain('PUTAR SEKARANG');
-    expect(astro).toContain('RESET');
-    expect(astro).toContain('SIAP OFFLINE');
+    expect(astro).toContain('data-role="secret-reset"');
+    expect(astro).toContain('data-role="mute-button"');
+    expect(astro).toContain('data-role="confetti-canvas"');
+    expect(astro).toContain('data-role="forfeit-flash"');
+    expect(astro).toContain('data-role="finale-overlay"');
+    expect(astro).toContain('data-role="active-count"');
+    expect(astro).toContain('data-role="prize-position"');
+    expect(astro).toContain('data-role="reset-dialog"');
+    expect(astro).toContain('data-role="reset-confirm"');
+    expect(astro).toContain('data-role="reset-cancel"');
   });
 });

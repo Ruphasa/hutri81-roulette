@@ -8,10 +8,11 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     <div class="top-frame-line"></div>
     <div class="bottom-frame-line"></div>
 
+    <button type="button" class="top-left-diamond" data-role="secret-reset" title="Operator Reset" aria-label="Operator Reset"></button>
     <div class="top-left-badge">GRIYA SHANTA &middot; RT 08</div>
-    <div class="top-left-diamond"></div>
 
-
+    <canvas class="confetti-canvas" data-role="confetti-canvas"></canvas>
+    <div class="forfeit-flash" data-role="forfeit-flash"></div>
 
     <div class="bg-red-split">
       <div class="wheel-wrapper">
@@ -96,6 +97,7 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     </div>
 
     <div class="top-right-stats">
+      <button type="button" class="mute-toggle-btn" data-role="mute-button" title="Toggle Suara (M)">🔊 SUARA AKTIF</button>
       <span class="stat-gold" data-role="active-count">164 NOMOR TERSISA</span>
       <span class="stat-cream" data-role="prize-position">HADIAH 02/05</span>
     </div>
@@ -105,8 +107,6 @@ import OfflineStatus from '../components/OfflineStatus.astro';
       <span class="word block-2">UNDIAN</span>
       <span class="word block-3">MERDEKA!</span>
     </div>
-
-
 
     <div class="middle-right-text">PUTAR RODA. TAHAN NAPAS.<br><span class="highlight">BIARKAN NASIB MEMILIH</span> SATU<br>NOMOR KAVLING MALAM INI.</div>
 
@@ -127,7 +127,7 @@ import OfflineStatus from '../components/OfflineStatus.astro';
       <OfflineStatus />
     </div>
 
-    <button class="skew-btn-secondary" data-role="reset-button">RESET</button>
+    <button class="skew-btn-secondary" data-role="reset-button" hidden>RESET</button>
 
     <dialog data-role="reset-dialog" style="background: var(--color-cream); border: 4px solid var(--color-gold); border-radius: 12px; padding: 20px; text-align: center; z-index: 100;">
       <h2 id="reset-title" style="font-family: var(--font-heavy); color: var(--color-black); margin-top: 0;">Reset seluruh undian?</h2>
@@ -137,6 +137,13 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     </dialog>
 
     <div class="winner-history-container" data-role="winner-history" style="position: absolute; bottom: 20%; right: 10%; max-height: 25%; overflow-y: auto; font-family: var(--font-condensed); font-size: 1.2vw; color: var(--color-black); z-index: 15;" hidden></div>
+
+    <div class="finale-overlay" data-role="finale-overlay" hidden>
+      <div class="finale-title">SELURUH HADIAH TELAH DIUNDI!</div>
+      <div class="finale-subtitle">MALAM PUNCAK HUT RI KE-81</div>
+      <div class="finale-winners-list" data-role="finale-winners"></div>
+      <div class="finale-greeting">Dirgahayu Republik Indonesia ke-81 &mdash; Griya Shanta RT 08</div>
+    </div>
   </div>
   <script src="../client/raffle-controller.ts"></script>
 </Layout>

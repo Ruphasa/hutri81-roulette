@@ -41,29 +41,34 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  aspect-ratio: 16 / 9;
+  max-width: calc(100vh * (16 / 9));
   background: var(--color-black);
   overflow: hidden;
 }
 
+/* Stage Mode 70/30 Dimensions */
 .bg-red-split {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 70vw;
+  height: 100vh;
   background: var(--color-crimson);
-  clip-path: polygon(0 0, 53% 0, 48% 100%, 0 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   z-index: 1;
 }
 
 .bg-cream-split {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  width: 30vw;
+  height: 100vh;
   background: var(--color-cream);
-  clip-path: polygon(70% 0, 100% 0, 100% 80%, 55% 100%);
   z-index: 2;
   overflow: hidden;
 }
@@ -102,7 +107,7 @@ body {
   pointer-events: none;
 }
 
-/* Top Left Badge & Diamond */
+/* Top Left Badge & Secret Reset Diamond */
 .top-left-badge {
   position: absolute;
   top: 2%;
@@ -129,8 +134,16 @@ body {
   border: 2px solid var(--color-gold);
   transform: rotate(45deg);
   background: transparent;
-  pointer-events: none;
   z-index: 10;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.top-left-diamond:hover {
+  transform: rotate(45deg) scale(1.2);
+  filter: drop-shadow(0 0 8px var(--color-gold));
 }
 
 /* Top Right Stats */
@@ -139,10 +152,9 @@ body {
   top: 2%;
   right: 2.5%;
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 8px;
   z-index: 10;
-  transform: skewX(-15deg);
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
 }
 
 .stat-gold {
@@ -154,6 +166,8 @@ body {
   font-size: 1.1vw;
   letter-spacing: 0.5px;
   padding: 0.35em 1.2em;
+  transform: skewX(-15deg);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
 }
 
 .stat-cream {
@@ -165,6 +179,27 @@ body {
   font-size: 1.1vw;
   letter-spacing: 0.5px;
   padding: 0.35em 1.2em;
+  transform: skewX(-15deg);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+}
+
+/* Audio Mute Button */
+.mute-toggle-btn {
+  background: var(--color-black);
+  color: var(--color-gold);
+  border: 2px solid var(--color-gold);
+  padding: 4px 10px;
+  font-family: var(--font-condensed);
+  font-weight: bold;
+  font-size: 0.9vw;
+  cursor: pointer;
+  transform: skew(-6deg);
+  transition: filter 0.2s;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+}
+
+.mute-toggle-btn:hover {
+  filter: brightness(1.2);
 }
 
 /* Ransom Note Title */
@@ -213,8 +248,6 @@ body {
   margin-left: 1.5vw;
 }
 
-
-
 /* Middle Right Text */
 .middle-right-text {
   position: absolute;
@@ -259,12 +292,12 @@ body {
 
 /* SVG Wheel and Badge */
 .wheel-wrapper {
-  position: absolute;
-  left: 10%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 62vh;
-  height: 62vh;
+  position: relative;
+  width: min(65vw, 85vh);
+  height: min(65vw, 85vh);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 4;
 }
 
@@ -327,13 +360,13 @@ body {
   margin-bottom: 2px;
 }
 
-.badge-value {
+.wheel-center-badge .badge-value {
   font-family: var(--font-heavy);
-  font-size: 7.5vh;
+  font-size: min(8vw, 16vh);
   color: var(--color-crimson);
   line-height: 1;
   margin: 2px 0;
-  letter-spacing: 1px;
+  letter-spacing: -1px;
 }
 
 .badge-footer {
@@ -357,7 +390,7 @@ body {
   height: 5vw;
   z-index: 6;
   pointer-events: none;
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.6));
 }
 
 /* Bottom Right Controls */
@@ -422,7 +455,7 @@ body {
   letter-spacing: 1px;
   transform: skewX(-12deg);
   cursor: pointer;
-  box-shadow: 4px 4px 0px rgba(0,0,0,0.8);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -436,7 +469,7 @@ body {
 
 .forfeit-btn:active:not(:disabled) {
   transform: skewX(-12deg) translateY(1px);
-  box-shadow: 2px 2px 0px rgba(0,0,0,0.8);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
 }
 
 .forfeit-btn:disabled {
@@ -504,6 +537,116 @@ body {
   z-index: 6;
   font-size: 0.8vw;
   opacity: 0.8;
+}
+
+/* Red Flash Vignette for Forfeit */
+.forfeit-flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, transparent 30%, rgba(220, 38, 38, 0.8) 100%);
+  pointer-events: none;
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.forfeit-flash.active {
+  opacity: 1;
+}
+
+/* Confetti Canvas */
+.confetti-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Grand Finale Celebration Overlay */
+.finale-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 16, 18, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 6vw;
+  text-align: center;
+  color: var(--color-white);
+  animation: finaleFadeIn 0.5s ease-out;
+}
+
+@keyframes finaleFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.finale-title {
+  font-family: var(--font-heavy);
+  font-size: min(4vw, 8vh);
+  color: var(--color-gold);
+  margin-bottom: 2vh;
+  text-shadow: 0 4px 20px rgba(193, 159, 72, 0.4);
+  letter-spacing: 2px;
+}
+
+.finale-subtitle {
+  font-family: var(--font-deco);
+  font-size: min(2.5vw, 5vh);
+  color: var(--color-cream);
+  margin-bottom: 3vh;
+}
+
+.finale-winners-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5vw;
+  max-width: 80vw;
+  max-height: 45vh;
+  overflow-y: auto;
+  margin-bottom: 3vh;
+  padding: 1vh 1vw;
+}
+
+.finale-winner-card {
+  background: var(--color-crimson);
+  border: 2px solid var(--color-gold);
+  padding: 1.5vh 2vw;
+  border-radius: 4px;
+  transform: skewX(-6deg);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
+}
+
+.finale-winner-lot {
+  font-family: var(--font-heavy);
+  font-size: min(3vw, 6vh);
+  color: var(--color-white);
+}
+
+.finale-winner-prize {
+  font-family: var(--font-condensed);
+  font-weight: bold;
+  font-size: min(1.2vw, 2.5vh);
+  color: var(--color-cream);
+}
+
+.finale-greeting {
+  font-family: var(--font-heavy);
+  font-size: min(1.6vw, 3.2vh);
+  color: var(--color-gold);
+  letter-spacing: 1px;
 }
 
 :focus-visible {

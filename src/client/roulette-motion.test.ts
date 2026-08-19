@@ -121,7 +121,7 @@ describe('animateRoulette', () => {
     expect(tickRates.length).toBeGreaterThan(1);
     expect(tickRates[0]).toBeGreaterThan(0);
     expect(tickRates[0]).toBeLessThanOrEqual(1.0);
-    expect(tickRates[tickRates.length - 1]).toBeLessThanOrEqual(tickRates[0]);
+    expect(tickRates[tickRates.length - 1]!).toBeLessThanOrEqual(tickRates[0]!);
   });
 
   it('invokes onTick even if readout element is null', async () => {
