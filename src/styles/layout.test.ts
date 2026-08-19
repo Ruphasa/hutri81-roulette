@@ -38,7 +38,7 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*position:\s*absolute;/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*68%\s+0,\s*62%\s+100%,\s*0\s+100%\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*63%\s+0,\s*47%\s+100%,\s*0\s+100%\);/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*z-index:\s*1;/);
 
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
@@ -207,11 +207,11 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.wheel-wrapper');
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*position:\s*absolute;/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*left:\s*5%;/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*left:\s*8%;/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*top:\s*50%;/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*transform:\s*translateY\(-50%\);/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(62vw,\s*84vh\);/);
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*height:\s*min\(62vw,\s*84vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(60vw,\s*82vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*height:\s*min\(60vw,\s*82vh\);/);
     expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*z-index:\s*4;/);
     expect(css).toContain('.wheel-svg');
     expect(css).toContain('.wheel-center-badge');

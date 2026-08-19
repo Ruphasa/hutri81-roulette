@@ -54,7 +54,7 @@ body {
   width: 100%;
   height: 100%;
   background: var(--color-crimson);
-  clip-path: polygon(0 0, 68% 0, 62% 100%, 0 100%);
+  clip-path: polygon(0 0, 63% 0, 47% 100%, 0 100%);
   z-index: 1;
 }
 
@@ -314,11 +314,11 @@ body {
 /* SVG Wheel and Badge */
 .wheel-wrapper {
   position: absolute;
-  left: 5%;
+  left: 8%;
   top: 50%;
   transform: translateY(-50%);
-  width: min(62vw, 84vh);
-  height: min(62vw, 84vh);
+  width: min(60vw, 82vh);
+  height: min(60vw, 82vh);
   display: flex;
   justify-content: center;
   align-items: center;
