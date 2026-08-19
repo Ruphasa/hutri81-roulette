@@ -2,7 +2,7 @@ import anime from 'animejs';
 import { createInitialState, transition } from '../domain/raffle-machine';
 import { generateLots } from '../domain/lot-generation';
 import { loadRaffleState, saveRaffleState, clearRaffleState } from '../lib/persistence';
-import type { EventConfig, RaffleState } from '../domain/types';
+import type { EventConfig, RaffleState, WinnerRecord } from '../domain/types';
 import { EVENT_CONFIG } from '../config/event';
 import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
 import { animateRoulette as defaultAnimateRoulette, resetCurrentRotation } from './roulette-motion';
@@ -18,6 +18,20 @@ export interface ControllerDependencies {
   readonly reducedMotion?: (() => boolean) | undefined;
   readonly soundEngine?: SoundEngine | undefined;
   readonly confetti?: ConfettiManager | undefined;
+}
+
+function createWinnerCard(w: WinnerRecord): HTMLElement {
+  const card = document.createElement('div');
+  card.className = 'finale-winner-card';
+  const lot = document.createElement('div');
+  lot.className = 'finale-winner-lot';
+  lot.textContent = w.lotId;
+  const prize = document.createElement('div');
+  prize.className = 'finale-winner-prize';
+  prize.textContent = w.prizeLabel;
+  card.appendChild(lot);
+  card.appendChild(prize);
+  return card;
 }
 
 export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies | undefined): () => void {
@@ -36,6 +50,11 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     drawBtn: (root.querySelector('[data-role="spin-button"]') || root.querySelector('[data-role="draw"]')) as HTMLButtonElement | null,
     forfeitBtn: root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement | null,
     advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement | null,
+    switchRoundBtn: (root.querySelector('[data-role="switch-round-button"]') || root.querySelector('.switch-round-btn')) as HTMLButtonElement | null,
+    roundBadge: (root.querySelector('[data-role="round-badge"]') || root.querySelector('.round-badge')) as HTMLElement | null,
+    intermissionDialog: (root.querySelector('[data-role="intermission-dialog"]') || root.querySelector('.intermission-dialog')) as HTMLDialogElement | null,
+    intermissionWinners: (root.querySelector('[data-role="intermission-winners"]') || root.querySelector('.intermission-winners-list')) as HTMLElement | null,
+    startMainRoundBtn: root.querySelector('[data-role="start-main-round-btn"]') as HTMLButtonElement | null,
     resetBtn: (root.querySelector('[data-role="reset-button"]') || root.querySelector('[data-role="reset"]')) as HTMLButtonElement | null,
     secretResetBtn: (root.querySelector('[data-role="secret-reset"]') || root.querySelector('[data-role="reset-diamond"]') || root.querySelector('.top-left-diamond')) as HTMLElement | null,
     resetDialog: root.querySelector('[data-role="reset-dialog"]') as HTMLDialogElement | null,
@@ -48,6 +67,10 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     forfeitFlash: (root.querySelector('[data-role="forfeit-flash"]') || root.querySelector('.forfeit-flash')) as HTMLElement | null,
     finaleOverlay: (root.querySelector('[data-role="finale-overlay"]') || root.querySelector('.finale-overlay')) as HTMLElement | null,
     finaleWinners: (root.querySelector('[data-role="finale-winners"]') || root.querySelector('.finale-winners-list')) as HTMLElement | null,
+    finaleSmallWinners: root.querySelector('[data-role="finale-small-winners"]') as HTMLElement | null,
+    finaleMainWinners: root.querySelector('[data-role="finale-main-winners"]') as HTMLElement | null,
+    finaleResetBtn: root.querySelector('[data-role="finale-reset-btn"]') as HTMLButtonElement | null,
+    finaleCloseBtn: root.querySelector('[data-role="finale-close-btn"]') as HTMLButtonElement | null,
   };
 
   const soundEngine = deps?.soundEngine || createSoundEngine(storage);
@@ -103,6 +126,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       if (els.drawBtn) els.drawBtn.disabled = true;
       if (els.forfeitBtn) els.forfeitBtn.disabled = true;
       if (els.advanceBtn) els.advanceBtn.disabled = true;
+      if (els.switchRoundBtn) els.switchRoundBtn.disabled = true;
       if (els.resetBtn) els.resetBtn.disabled = true;
       return;
     } else {
@@ -117,13 +141,36 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       els.activeCount.textContent = state.activeLots.length.toString();
     }
 
+    // Round Badge
+    if (els.roundBadge) {
+      if (state.round === 'small') {
+        els.roundBadge.textContent = 'BABAK HADIAH HIBURAN';
+        els.roundBadge.classList.remove('gold');
+      } else {
+        els.roundBadge.textContent = 'BABAK HADIAH UTAMA';
+        els.roundBadge.classList.add('gold');
+      }
+    }
+
     // Prize Position
     if (els.prizePosition) {
       if (state.round === 'small') {
         els.prizePosition.textContent = `Hadiah Hiburan #${state.smallPrizeCount + 1}`;
       } else {
         const p = config.prizes[state.mainPrizeIndex];
-        els.prizePosition.textContent = p?.label || '';
+        els.prizePosition.textContent = p ? `HADIAH UTAMA #${state.mainPrizeIndex + 1}: ${p.label}` : '';
+      }
+    }
+
+    // Switch Round Button
+    if (els.switchRoundBtn) {
+      if (state.round === 'small') {
+        const isVisible = currentUiPhase === 'IDLE' || currentUiPhase === 'REVEAL_WINNER';
+        els.switchRoundBtn.hidden = !isVisible;
+        els.switchRoundBtn.disabled = currentUiPhase === 'SPINNING';
+      } else {
+        els.switchRoundBtn.hidden = true;
+        els.switchRoundBtn.disabled = true;
       }
     }
 
@@ -200,21 +247,26 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     if (els.finaleOverlay) {
       if (currentUiPhase === 'COMPLETE') {
         els.finaleOverlay.hidden = false;
-        const list = els.finaleWinners || els.finaleOverlay.querySelector('[data-role="finale-winners"]') || els.finaleOverlay.querySelector('.finale-winners-list');
-        if (list) {
-          list.replaceChildren();
+        const smallWinners = state.winners.filter(w => w.round === 'small');
+        const mainWinners = state.winners.filter(w => w.round === 'main');
+
+        if (els.finaleSmallWinners) {
+          els.finaleSmallWinners.replaceChildren();
+          for (const w of smallWinners) {
+            els.finaleSmallWinners.appendChild(createWinnerCard(w));
+          }
+        }
+        if (els.finaleMainWinners) {
+          els.finaleMainWinners.replaceChildren();
+          for (const w of mainWinners) {
+            els.finaleMainWinners.appendChild(createWinnerCard(w));
+          }
+        }
+        const fallbackList = els.finaleWinners || els.finaleOverlay.querySelector('.finale-winners-list');
+        if (fallbackList && !els.finaleSmallWinners && !els.finaleMainWinners) {
+          fallbackList.replaceChildren();
           for (const w of state.winners) {
-            const card = document.createElement('div');
-            card.className = 'finale-winner-card';
-            const lot = document.createElement('div');
-            lot.className = 'finale-winner-lot';
-            lot.textContent = w.lotId;
-            const prize = document.createElement('div');
-            prize.className = 'finale-winner-prize';
-            prize.textContent = w.prizeLabel;
-            card.appendChild(lot);
-            card.appendChild(prize);
-            list.appendChild(card);
+            fallbackList.appendChild(createWinnerCard(w));
           }
         }
       } else {
@@ -327,6 +379,49 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
   }
 
+  function populateIntermissionWinners() {
+    if (!els.intermissionWinners) return;
+    els.intermissionWinners.replaceChildren();
+    const smallWinners = state.winners.filter((w) => w.round === 'small');
+    for (const w of smallWinners) {
+      els.intermissionWinners.appendChild(createWinnerCard(w));
+    }
+  }
+
+  function handleSwitchRoundClick() {
+    if (state.round !== 'small') return;
+    if (currentUiPhase !== 'IDLE' && currentUiPhase !== 'REVEAL_WINNER') return;
+
+    populateIntermissionWinners();
+    if (els.intermissionDialog && typeof els.intermissionDialog.showModal === 'function') {
+      els.intermissionDialog.showModal();
+    }
+  }
+
+  function handleStartMainRound() {
+    if (els.intermissionDialog && typeof els.intermissionDialog.close === 'function') {
+      els.intermissionDialog.close();
+    }
+    try {
+      state = transition(state, { type: 'SWITCH_TO_MAIN_ROUND', fullPool }, config.prizes);
+    } catch (e: any) {
+      currentUiPhase = 'ERROR';
+      errorMessage = e.message;
+      render();
+      return;
+    }
+
+    if (saveAndRender()) {
+      soundEngine.playFanfare();
+    }
+  }
+
+  function handleFinaleClose() {
+    if (els.finaleOverlay) {
+      els.finaleOverlay.hidden = true;
+    }
+  }
+
   function handleResetClick() {
     if (els.resetDialog && typeof els.resetDialog.showModal === 'function') {
       els.resetDialog.showModal();
@@ -344,6 +439,9 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
   function handleResetConfirm() {
     if (els.resetDialog && typeof els.resetDialog.close === 'function') {
       els.resetDialog.close();
+    }
+    if (els.intermissionDialog && typeof els.intermissionDialog.close === 'function') {
+      els.intermissionDialog.close();
     }
     clearRaffleState(storage);
     state = createInitialState(config, fullPool);
@@ -367,6 +465,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
 
   function handleKeyDown(e: KeyboardEvent) {
     if (els.resetDialog && els.resetDialog.open) return;
+    if (els.intermissionDialog && els.intermissionDialog.open) return;
     if (e.key === 'Enter') {
       if (currentUiPhase === 'IDLE') {
         handleDraw();
@@ -391,10 +490,14 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
   }
   if (els.forfeitBtn) els.forfeitBtn.addEventListener('click', handleForfeit);
+  if (els.switchRoundBtn) els.switchRoundBtn.addEventListener('click', handleSwitchRoundClick);
+  if (els.startMainRoundBtn) els.startMainRoundBtn.addEventListener('click', handleStartMainRound);
   if (els.resetBtn) els.resetBtn.addEventListener('click', handleResetClick);
   if (els.secretResetBtn) els.secretResetBtn.addEventListener('click', handleResetClick);
   if (els.resetCancelBtn) els.resetCancelBtn.addEventListener('click', handleResetCancel);
   if (els.resetConfirmBtn) els.resetConfirmBtn.addEventListener('click', handleResetConfirm);
+  if (els.finaleResetBtn) els.finaleResetBtn.addEventListener('click', handleResetClick);
+  if (els.finaleCloseBtn) els.finaleCloseBtn.addEventListener('click', handleFinaleClose);
   if (els.muteBtn) els.muteBtn.addEventListener('click', handleMuteToggle);
   document.addEventListener('keydown', handleKeyDown);
 
@@ -412,10 +515,14 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       }
     }
     if (els.forfeitBtn) els.forfeitBtn.removeEventListener('click', handleForfeit);
+    if (els.switchRoundBtn) els.switchRoundBtn.removeEventListener('click', handleSwitchRoundClick);
+    if (els.startMainRoundBtn) els.startMainRoundBtn.removeEventListener('click', handleStartMainRound);
     if (els.resetBtn) els.resetBtn.removeEventListener('click', handleResetClick);
     if (els.secretResetBtn) els.secretResetBtn.removeEventListener('click', handleResetClick);
     if (els.resetCancelBtn) els.resetCancelBtn.removeEventListener('click', handleResetCancel);
     if (els.resetConfirmBtn) els.resetConfirmBtn.removeEventListener('click', handleResetConfirm);
+    if (els.finaleResetBtn) els.finaleResetBtn.removeEventListener('click', handleResetClick);
+    if (els.finaleCloseBtn) els.finaleCloseBtn.removeEventListener('click', handleFinaleClose);
     if (els.muteBtn) els.muteBtn.removeEventListener('click', handleMuteToggle);
     document.removeEventListener('keydown', handleKeyDown);
     confetti.stop();
@@ -436,4 +543,3 @@ if (typeof window !== 'undefined') {
     init();
   }
 }
-
