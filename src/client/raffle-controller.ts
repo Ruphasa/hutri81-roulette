@@ -6,6 +6,8 @@ import type { EventConfig, RaffleState } from '../domain/types';
 import { EVENT_CONFIG } from '../config/event';
 import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
 import { animateRoulette as defaultAnimateRoulette, resetCurrentRotation } from './roulette-motion';
+import { createSoundEngine, type SoundEngine } from './sound-effects';
+import { createConfetti, type ConfettiManager } from './confetti';
 
 export interface ControllerDependencies {
   readonly config?: EventConfig | undefined;
@@ -14,6 +16,8 @@ export interface ControllerDependencies {
   readonly storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | undefined;
   readonly now?: (() => string) | undefined;
   readonly reducedMotion?: (() => boolean) | undefined;
+  readonly soundEngine?: SoundEngine | undefined;
+  readonly confetti?: ConfettiManager | undefined;
 }
 
 export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies | undefined): () => void {
@@ -33,12 +37,21 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     forfeitBtn: root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement | null,
     advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement | null,
     resetBtn: (root.querySelector('[data-role="reset-button"]') || root.querySelector('[data-role="reset"]')) as HTMLButtonElement | null,
+    secretResetBtn: (root.querySelector('[data-role="secret-reset"]') || root.querySelector('[data-role="reset-diamond"]') || root.querySelector('.top-left-diamond')) as HTMLElement | null,
     resetDialog: root.querySelector('[data-role="reset-dialog"]') as HTMLDialogElement | null,
     resetCancelBtn: root.querySelector('[data-role="reset-cancel"]') as HTMLButtonElement | null,
     resetConfirmBtn: root.querySelector('[data-role="reset-confirm"]') as HTMLButtonElement | null,
     winnerHistory: root.querySelector('[data-role="winner-history"]') as HTMLElement | null,
     errorPanel: root.querySelector('[data-role="error"]') as HTMLElement | null,
+    muteBtn: (root.querySelector('[data-role="mute-button"]') || root.querySelector('.mute-toggle-btn')) as HTMLButtonElement | null,
+    confettiCanvas: (root.querySelector('[data-role="confetti-canvas"]') || root.querySelector('.confetti-canvas')) as HTMLCanvasElement | null,
+    forfeitFlash: (root.querySelector('[data-role="forfeit-flash"]') || root.querySelector('.forfeit-flash')) as HTMLElement | null,
+    finaleOverlay: (root.querySelector('[data-role="finale-overlay"]') || root.querySelector('.finale-overlay')) as HTMLElement | null,
+    finaleWinners: (root.querySelector('[data-role="finale-winners"]') || root.querySelector('.finale-winners-list')) as HTMLElement | null,
   };
+
+  const soundEngine = deps?.soundEngine || createSoundEngine(storage);
+  const confetti = deps?.confetti || (els.confettiCanvas ? createConfetti(els.confettiCanvas) : { fire: () => {}, stop: () => {} });
 
   const fullPool = generateLots(config.lotRanges);
   let state: RaffleState;
@@ -54,6 +67,17 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       currentUiPhase = 'ERROR';
       errorMessage = loadRes.reason;
     }
+  }
+
+  function updateMuteButton() {
+    if (els.muteBtn) {
+      els.muteBtn.textContent = soundEngine.isMuted() ? '🔇 SUARA: SENYAP' : '🔊 SUARA: AKTIF';
+    }
+  }
+
+  function handleMuteToggle() {
+    soundEngine.toggleMute();
+    updateMuteButton();
   }
 
   function updatePhase() {
@@ -166,6 +190,32 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
         els.winnerHistory.appendChild(d);
       }
     }
+
+    // Grand Finale Overlay
+    if (els.finaleOverlay) {
+      if (currentUiPhase === 'COMPLETE') {
+        els.finaleOverlay.hidden = false;
+        const list = els.finaleWinners || els.finaleOverlay.querySelector('[data-role="finale-winners"]') || els.finaleOverlay.querySelector('.finale-winners-list');
+        if (list) {
+          list.replaceChildren();
+          for (const w of state.winners) {
+            const card = document.createElement('div');
+            card.className = 'finale-winner-card';
+            const lot = document.createElement('div');
+            lot.className = 'finale-winner-lot';
+            lot.textContent = w.lotId;
+            const prize = document.createElement('div');
+            prize.className = 'finale-winner-prize';
+            prize.textContent = w.prizeLabel;
+            card.appendChild(lot);
+            card.appendChild(prize);
+            list.appendChild(card);
+          }
+        }
+      } else {
+        els.finaleOverlay.hidden = true;
+      }
+    }
   }
 
   function saveAndRender(): boolean {
@@ -202,7 +252,8 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       activeLots: state.activeLots,
       fullPool: fullPool,
       winner: winner,
-      reducedMotion: reducedMotion()
+      reducedMotion: reducedMotion(),
+      onTick: (rate: number) => soundEngine.playTick(rate)
     });
 
     try {
@@ -214,7 +265,11 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       return;
     }
     
-    saveAndRender();
+    if (saveAndRender()) {
+      soundEngine.playLockImpact();
+      soundEngine.playFanfare();
+      confetti.fire({ count: 90 });
+    }
   }
 
   function handleAdvance() {
@@ -231,6 +286,14 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
 
   async function handleForfeit() {
     if (currentUiPhase !== 'REVEAL_WINNER') return;
+    soundEngine.playForfeit();
+    if (els.forfeitFlash) {
+      els.forfeitFlash.classList.add('active');
+      setTimeout(() => {
+        els.forfeitFlash?.classList.remove('active');
+      }, 400);
+    }
+    confetti.stop();
     try {
       state = transition(state, { type: 'FORFEIT' }, config.prizes);
     } catch (e: any) {
@@ -280,6 +343,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     clearRaffleState(storage);
     state = createInitialState(config, fullPool);
     currentUiPhase = 'IDLE';
+    confetti.stop();
     if (els.wheel) {
       anime.remove(els.wheel);
       els.wheel.style.transform = 'rotate(0deg)';
@@ -288,6 +352,9 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       anime.remove(els.centerValue);
       els.centerValue.style.transform = '';
       els.centerValue.style.opacity = '';
+    }
+    if (els.finaleOverlay) {
+      els.finaleOverlay.hidden = true;
     }
     resetCurrentRotation();
     render();
@@ -299,8 +366,14 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
       if (currentUiPhase === 'IDLE') {
         handleDraw();
       } else if (currentUiPhase === 'REVEAL_WINNER') {
-        handleAdvance();
+        if (els.advanceBtn) {
+          handleAdvance();
+        } else {
+          handleMainClick();
+        }
       }
+    } else if (e.key === 'm' || e.key === 'M' || e.code === 'KeyM') {
+      handleMuteToggle();
     }
   }
 
@@ -314,10 +387,13 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
   }
   if (els.forfeitBtn) els.forfeitBtn.addEventListener('click', handleForfeit);
   if (els.resetBtn) els.resetBtn.addEventListener('click', handleResetClick);
+  if (els.secretResetBtn) els.secretResetBtn.addEventListener('click', handleResetClick);
   if (els.resetCancelBtn) els.resetCancelBtn.addEventListener('click', handleResetCancel);
   if (els.resetConfirmBtn) els.resetConfirmBtn.addEventListener('click', handleResetConfirm);
+  if (els.muteBtn) els.muteBtn.addEventListener('click', handleMuteToggle);
   document.addEventListener('keydown', handleKeyDown);
 
+  updateMuteButton();
   updatePhase();
   render();
 
@@ -332,9 +408,12 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
     if (els.forfeitBtn) els.forfeitBtn.removeEventListener('click', handleForfeit);
     if (els.resetBtn) els.resetBtn.removeEventListener('click', handleResetClick);
+    if (els.secretResetBtn) els.secretResetBtn.removeEventListener('click', handleResetClick);
     if (els.resetCancelBtn) els.resetCancelBtn.removeEventListener('click', handleResetCancel);
     if (els.resetConfirmBtn) els.resetConfirmBtn.removeEventListener('click', handleResetConfirm);
+    if (els.muteBtn) els.muteBtn.removeEventListener('click', handleMuteToggle);
     document.removeEventListener('keydown', handleKeyDown);
+    confetti.stop();
   };
 }
 
