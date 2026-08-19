@@ -8,7 +8,11 @@ export interface RouletteMotionOptions {
   readonly winner: string;
   readonly reducedMotion: boolean;
   readonly durationMs?: number;
+  readonly onTick?: ((rate: number) => void) | undefined;
 }
+
+export const DEFAULT_ROULETTE_DURATION_MS = 7000;
+export const REDUCED_MOTION_DURATION_MS = 50;
 
 let currentRotation = 0;
 
@@ -21,8 +25,17 @@ export function resetCurrentRotation(): void {
 }
 
 export async function animateRoulette(options: RouletteMotionOptions): Promise<void> {
-  const { wheel, readout, activeLots, fullPool, winner, reducedMotion, durationMs = 4000 } = options;
-  const duration = reducedMotion ? 50 : durationMs;
+  const {
+    wheel,
+    readout,
+    activeLots,
+    fullPool,
+    winner,
+    reducedMotion,
+    durationMs = DEFAULT_ROULETTE_DURATION_MS,
+    onTick
+  } = options;
+  const duration = reducedMotion ? REDUCED_MOTION_DURATION_MS : durationMs;
   const pool = fullPool && fullPool.length > 0 ? fullPool : activeLots;
 
   try {
@@ -85,7 +98,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         // Text proxy uses MONOTONIC easing (easeOutCubic) — it only goes forward,
         // slowing down naturally. Never bounces backward like elastic would.
         // The wheel visual gets the dramatic elastic bounce separately.
-        if (activeLots.length > 0 && readout) {
+        if ((activeLots.length > 0 || pool.length > 0) && (readout || onTick)) {
           anime({
             targets: proxy,
             angle: deltaAngle,
@@ -94,8 +107,12 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
             update: () => {
               let tick = Math.max(0, Math.floor(proxy.angle / 45));
               if (tick !== lastIndex) {
-                readout.textContent = sequence[tick] ?? winner;
+                if (readout) {
+                  readout.textContent = sequence[tick] ?? winner;
+                }
                 lastIndex = tick;
+                const rate = deltaAngle > 0 ? Math.min(1.0, (deltaAngle - proxy.angle) / deltaAngle) : 1.0;
+                onTick?.(rate);
               }
             }
           });
@@ -106,7 +123,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
             targets: wheel,
             rotate: targetAngle,
             duration: duration,
-            easing: 'easeOutElastic(1, .8)', // Dramatic Persona 5 bounce
+            easing: 'easeOutElastic(1, .75)', // Dramatic Persona 5 bounce
             complete: () => {
               currentRotation = targetAngle;
               resolve();

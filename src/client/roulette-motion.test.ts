@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { animateRoulette, getCurrentRotation, resetCurrentRotation } from './roulette-motion';
+import {
+  animateRoulette,
+  getCurrentRotation,
+  resetCurrentRotation,
+  DEFAULT_ROULETTE_DURATION_MS,
+  REDUCED_MOTION_DURATION_MS
+} from './roulette-motion';
 
 describe('animateRoulette', () => {
   let wheel: HTMLElement;
@@ -9,6 +15,11 @@ describe('animateRoulette', () => {
     resetCurrentRotation();
     wheel = document.createElement('div');
     readout = document.createElement('div');
+  });
+
+  it('exports expected timing constants for stage suspense', () => {
+    expect(DEFAULT_ROULETTE_DURATION_MS).toBe(7000);
+    expect(REDUCED_MOTION_DURATION_MS).toBe(50);
   });
 
   it('cycles active lot labels and resolves on the chosen winner for normal motion', async () => {
@@ -89,5 +100,72 @@ describe('animateRoulette', () => {
 
     expect(readout.textContent).toBe(winner);
   });
+
+  it('invokes onTick callback with rate between 0 and 1 as spin progresses', async () => {
+    const activeLots = ['A1', 'A2', 'A3'];
+    const winner = 'A2';
+    const tickRates: number[] = [];
+    
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      winner,
+      reducedMotion: false,
+      durationMs: 300,
+      onTick: (rate) => {
+        tickRates.push(rate);
+      }
+    });
+
+    expect(tickRates.length).toBeGreaterThan(1);
+    expect(tickRates[0]).toBeGreaterThan(0);
+    expect(tickRates[0]).toBeLessThanOrEqual(1.0);
+    expect(tickRates[tickRates.length - 1]).toBeLessThanOrEqual(tickRates[0]);
+  });
+
+  it('invokes onTick even if readout element is null', async () => {
+    const activeLots = ['A1', 'A2', 'A3'];
+    const winner = 'A2';
+    let tickCount = 0;
+    
+    await animateRoulette({
+      wheel,
+      activeLots,
+      winner,
+      reducedMotion: false,
+      durationMs: 300,
+      onTick: () => {
+        tickCount++;
+      }
+    });
+
+    expect(tickCount).toBeGreaterThan(0);
+  });
+
+  it('resolves cleanly when given explicit durationMs and fullPool', async () => {
+    const activeLots = ['A1', 'A2'];
+    const fullPool = ['A1', 'A2', 'A3', 'A4', 'A5'];
+    const winner = 'A4';
+    const tickRates: number[] = [];
+
+    await animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      fullPool,
+      winner,
+      reducedMotion: false,
+      durationMs: 100,
+      onTick: (rate) => {
+        tickRates.push(rate);
+      }
+    });
+
+    expect(readout.textContent).toBe('A4');
+    expect(tickRates.length).toBeGreaterThan(0);
+  });
 });
+
+
 
