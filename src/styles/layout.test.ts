@@ -32,14 +32,22 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.stage-container\s*\{[\s\S]*overflow:\s*hidden;/);
   });
 
-  it('configures Stage Mode 70/30 split dimensions in global.css', () => {
+  it('configures Persona 5 3-polygon background split dimensions and clip-paths in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*background:\s*var\(--color-crimson\);/);
-    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*70%;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*height:\s*100%;/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*clip-path:\s*polygon\(0\s+0,\s*53%\s+0,\s*48%\s+100%,\s*0\s+100%\);/);
+    expect(css).toMatch(/\.bg-red-split\s*\{[\s\S]*z-index:\s*1;/);
+
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*background:\s*var\(--color-cream\);/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*30%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(70%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*55%\s+100%\);/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*z-index:\s*2;/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*overflow:\s*hidden;/);
   });
 
   it('includes sunburst svg lines in .bg-cream-split in index.astro and global.css', () => {
@@ -107,10 +115,14 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
 
     expect(astro).toContain('class="switch-round-btn"');
     expect(astro).toContain('data-role="switch-round-button"');
+    expect(astro).toContain('🏆 Babak Utama ➔');
 
     expect(css).toContain('.switch-round-btn');
     expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*background:\s*var\(--color-gold\);/);
+    expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*color:\s*var\(--color-black\);/);
     expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*transform:\s*skewX\(-/);
+    expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*font-size:\s*0\.9vw;/);
+    expect(css).toMatch(/\.switch-round-btn\s*\{[\s\S]*cursor:\s*pointer;/);
   });
 
   it('configures intermission modal dialog in global.css and index.astro', () => {
@@ -188,7 +200,13 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
   it('configures wheel wrapper, SVG wheel, center badge hero typography, and diamond pointer in global.css', () => {
     const css = fs.readFileSync(globalCssPath, 'utf-8');
     expect(css).toContain('.wheel-wrapper');
-    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(65vw,\s*85vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*position:\s*absolute;/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*left:\s*8%;/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*top:\s*50%;/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*transform:\s*translateY\(-50%\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*width:\s*min\(58vw,\s*75vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*height:\s*min\(58vw,\s*75vh\);/);
+    expect(css).toMatch(/\.wheel-wrapper\s*\{[\s\S]*z-index:\s*4;/);
     expect(css).toContain('.wheel-svg');
     expect(css).toContain('.wheel-center-badge');
     expect(css).toMatch(/\.wheel-center-badge\s*\{[\s\S]*clip-path:\s*polygon\(/);

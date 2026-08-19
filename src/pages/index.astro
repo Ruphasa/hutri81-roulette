@@ -14,73 +14,7 @@ import OfflineStatus from '../components/OfflineStatus.astro';
     <canvas class="confetti-canvas" data-role="confetti-canvas"></canvas>
     <div class="forfeit-flash" data-role="forfeit-flash"></div>
 
-    <div class="bg-red-split">
-      <div class="wheel-wrapper">
-        <svg class="wheel-svg" viewBox="0 0 500 500" data-role="wheel">
-          <!-- Outermost decorative gold ring -->
-          <circle cx="250" cy="250" r="247" fill="none" stroke="var(--color-gold)" stroke-width="2" />
-          
-          <!-- Outer Crimson Ring with Gold Outlines -->
-          <circle cx="250" cy="250" r="236" fill="none" stroke="var(--color-crimson)" stroke-width="18" />
-          <circle cx="250" cy="250" r="245" fill="none" stroke="var(--color-gold)" stroke-width="2" />
-          <circle cx="250" cy="250" r="227" fill="none" stroke="var(--color-gold)" stroke-width="2" />
-
-          <!-- 16 Wheel Slices (Black, Gold, Black, Green, Black, Red repeating) -->
-          <g class="wheel-slices">
-            <!-- Slice 0 (Black) -->
-            <path d="M 250 250 L 206.1 29.32 A 225 225 0 0 1 293.9 29.32 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 1 (Gold) -->
-            <path d="M 250 250 L 293.9 29.32 A 225 225 0 0 1 375 62.92 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
-            <!-- Slice 2 (Black) -->
-            <path d="M 250 250 L 375 62.92 A 225 225 0 0 1 437.08 125 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 3 (Green) -->
-            <path d="M 250 250 L 437.08 125 A 225 225 0 0 1 470.68 206.1 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 4 (Black) -->
-            <path d="M 250 250 L 470.68 206.1 A 225 225 0 0 1 470.68 293.9 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 5 (Red) -->
-            <path d="M 250 250 L 470.68 293.9 A 225 225 0 0 1 437.08 375 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 6 (Black) -->
-            <path d="M 250 250 L 437.08 375 A 225 225 0 0 1 375 437.08 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 7 (Gold) -->
-            <path d="M 250 250 L 375 437.08 A 225 225 0 0 1 293.9 470.68 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
-            <!-- Slice 8 (Black) -->
-            <path d="M 250 250 L 293.9 470.68 A 225 225 0 0 1 206.1 470.68 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 9 (Green) -->
-            <path d="M 250 250 L 206.1 470.68 A 225 225 0 0 1 125 437.08 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 10 (Black) -->
-            <path d="M 250 250 L 125 437.08 A 225 225 0 0 1 62.92 375 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 11 (Red) -->
-            <path d="M 250 250 L 62.92 375 A 225 225 0 0 1 29.32 293.9 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 12 (Black) -->
-            <path d="M 250 250 L 29.32 293.9 A 225 225 0 0 1 29.32 206.1 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 13 (Gold) -->
-            <path d="M 250 250 L 29.32 206.1 A 225 225 0 0 1 62.92 125 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
-            <!-- Slice 14 (Black) -->
-            <path d="M 250 250 L 62.92 125 A 225 225 0 0 1 125 62.92 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
-            <!-- Slice 15 (Green) -->
-            <path d="M 250 250 L 125 62.92 A 225 225 0 0 1 206.1 29.32 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
-          </g>
-
-          <!-- Concentric Dividing Gold Ring across Slices -->
-          <circle cx="250" cy="250" r="185" fill="none" stroke="var(--color-gold)" stroke-width="2" />
-
-          <!-- Center Hub Black Disk with Gold Outline -->
-          <circle cx="250" cy="250" r="148" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="4" />
-        </svg>
-        
-        <div class="wheel-center-badge">
-          <div class="badge-label">NOMOR TERKUNCI</div>
-          <div class="badge-value" data-role="winner-display">???</div>
-          <div class="badge-footer">PEMENANG</div>
-        </div>
-        <svg class="diamond-pointer" viewBox="0 0 100 100">
-          <polygon points="10,0 90,0 50,70" fill="var(--color-white)" stroke="var(--color-black)" stroke-width="4"/>
-          <polygon points="30,0 70,0 50,35" fill="var(--color-cream)" stroke="var(--color-black)" stroke-width="2"/>
-        </svg>
-      </div>
-
-      <div class="bottom-left-text">sekali putar, satu pemenang!</div>
-    </div>
+    <div class="bg-red-split"></div>
 
     <div class="bg-cream-split">
       <svg class="sunburst-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
@@ -96,8 +30,75 @@ import OfflineStatus from '../components/OfflineStatus.astro';
       </svg>
     </div>
 
+    <div class="wheel-wrapper">
+      <svg class="wheel-svg" viewBox="0 0 500 500" data-role="wheel">
+        <!-- Outermost decorative gold ring -->
+        <circle cx="250" cy="250" r="247" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+        
+        <!-- Outer Crimson Ring with Gold Outlines -->
+        <circle cx="250" cy="250" r="236" fill="none" stroke="var(--color-crimson)" stroke-width="18" />
+        <circle cx="250" cy="250" r="245" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+        <circle cx="250" cy="250" r="227" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+
+        <!-- 16 Wheel Slices (Black, Gold, Black, Green, Black, Red repeating) -->
+        <g class="wheel-slices">
+          <!-- Slice 0 (Black) -->
+          <path d="M 250 250 L 206.1 29.32 A 225 225 0 0 1 293.9 29.32 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 1 (Gold) -->
+          <path d="M 250 250 L 293.9 29.32 A 225 225 0 0 1 375 62.92 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+          <!-- Slice 2 (Black) -->
+          <path d="M 250 250 L 375 62.92 A 225 225 0 0 1 437.08 125 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 3 (Green) -->
+          <path d="M 250 250 L 437.08 125 A 225 225 0 0 1 470.68 206.1 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 4 (Black) -->
+          <path d="M 250 250 L 470.68 206.1 A 225 225 0 0 1 470.68 293.9 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 5 (Red) -->
+          <path d="M 250 250 L 470.68 293.9 A 225 225 0 0 1 437.08 375 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 6 (Black) -->
+          <path d="M 250 250 L 437.08 375 A 225 225 0 0 1 375 437.08 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 7 (Gold) -->
+          <path d="M 250 250 L 375 437.08 A 225 225 0 0 1 293.9 470.68 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+          <!-- Slice 8 (Black) -->
+          <path d="M 250 250 L 293.9 470.68 A 225 225 0 0 1 206.1 470.68 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 9 (Green) -->
+          <path d="M 250 250 L 206.1 470.68 A 225 225 0 0 1 125 437.08 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 10 (Black) -->
+          <path d="M 250 250 L 125 437.08 A 225 225 0 0 1 62.92 375 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 11 (Red) -->
+          <path d="M 250 250 L 62.92 375 A 225 225 0 0 1 29.32 293.9 Z" fill="var(--color-crimson)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 12 (Black) -->
+          <path d="M 250 250 L 29.32 293.9 A 225 225 0 0 1 29.32 206.1 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 13 (Gold) -->
+          <path d="M 250 250 L 29.32 206.1 A 225 225 0 0 1 62.92 125 Z" fill="var(--color-gold)" stroke="var(--color-black)" stroke-width="1.5" />
+          <!-- Slice 14 (Black) -->
+          <path d="M 250 250 L 62.92 125 A 225 225 0 0 1 125 62.92 Z" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="1.5" />
+          <!-- Slice 15 (Green) -->
+          <path d="M 250 250 L 125 62.92 A 225 225 0 0 1 206.1 29.32 Z" fill="var(--color-green)" stroke="var(--color-gold)" stroke-width="1.5" />
+        </g>
+
+        <!-- Concentric Dividing Gold Ring across Slices -->
+        <circle cx="250" cy="250" r="185" fill="none" stroke="var(--color-gold)" stroke-width="2" />
+
+        <!-- Center Hub Black Disk with Gold Outline -->
+        <circle cx="250" cy="250" r="148" fill="var(--color-black)" stroke="var(--color-gold)" stroke-width="4" />
+      </svg>
+      
+      <div class="wheel-center-badge">
+        <div class="badge-label">NOMOR TERKUNCI</div>
+        <div class="badge-value" data-role="winner-display">???</div>
+        <div class="badge-footer">PEMENANG</div>
+      </div>
+      <svg class="diamond-pointer" viewBox="0 0 100 100">
+        <polygon points="10,0 90,0 50,70" fill="var(--color-white)" stroke="var(--color-black)" stroke-width="4"/>
+        <polygon points="30,0 70,0 50,35" fill="var(--color-cream)" stroke="var(--color-black)" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <div class="bottom-left-text">sekali putar, satu pemenang!</div>
+
     <div class="top-right-stats">
       <div class="round-badge" data-role="round-badge">BABAK HADIAH HIBURAN</div>
+      <button type="button" class="switch-round-btn" data-role="switch-round-button" hidden>🏆 Babak Utama ➔</button>
       <button type="button" class="mute-toggle-btn" data-role="mute-button" title="Toggle Suara (M)">🔊 SUARA AKTIF</button>
       <span class="stat-gold" data-role="active-count">164 NOMOR TERSISA</span>
       <span class="stat-cream" data-role="prize-position">HADIAH 02/05</span>
@@ -120,7 +121,6 @@ import OfflineStatus from '../components/OfflineStatus.astro';
           <span class="btn-arrow" aria-hidden="true">&#9654;</span>
         </button>
         <button class="forfeit-btn" data-role="forfeit-button" hidden>HANGUS & UNDI ULANG</button>
-        <button type="button" class="switch-round-btn" data-role="switch-round-button" hidden>🏆 SELESAIKAN HIBURAN & KE HADIAH UTAMA</button>
       </div>
       <div class="btn-subtext">ENTER - MULAI UNDIAN</div>
     </div>
