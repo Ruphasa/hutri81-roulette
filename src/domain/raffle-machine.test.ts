@@ -4,119 +4,167 @@ import {
   stabilizeRestoredState,
   transition,
 } from './raffle-machine';
-import type { EventConfig, Prize, RaffleState } from './types';
+import type { EventConfig, RaffleState } from './types';
+import { MAIN_PRIZES } from '../config/event';
 
 const config: EventConfig = {
   id: 'hut-ri-81',
   title: 'Undian HUT RI ke-81',
   neighborhood: 'RT 01 / RW 01',
   lotRanges: [{ prefix: 'L', start: 201, end: 203 }],
-  prizes: [
-    { id: 'hadiah-1', label: 'Hadiah ke-1' },
-    { id: 'hadiah-2', label: 'Hadiah ke-2' },
-  ],
+  prizes: MAIN_PRIZES,
 };
 
-const prizes: readonly Prize[] = config.prizes;
 const fullPool = ['L201', 'L202', 'L203'];
 const drawnAt = '2026-08-17T12:00:00.000Z';
 
 function startDraw(state = createInitialState(config, fullPool)) {
-  return transition(state, { type: 'START_DRAW', lotId: 'L202', drawnAt }, prizes);
+  return transition(state, { type: 'START_DRAW', lotId: 'L202', drawnAt }, MAIN_PRIZES);
 }
 
-describe('raffle state transitions', () => {
-  it('starts a draw by consuming the selected lot and keeping it pending during animation', () => {
-    const initial = createInitialState(config, fullPool);
-    const spinning = startDraw(initial);
+describe('two-round raffle state transitions', () => {
+  it('handles small prize draw and dynamic count progression', () => {
+    let state = createInitialState(config, fullPool);
+    expect(state.round).toBe('small');
+    expect(state.smallPrizeCount).toBe(0);
+    expect(state.mainPrizeIndex).toBe(0);
 
-    expect(spinning).toEqual({
-      phase: 'spinning',
-      activeLots: ['L201', 'L203'],
-      winners: [],
-      prizeIndex: 0,
-      pendingWinner: {
-        lotId: 'L202',
-        prizeId: 'hadiah-1',
-        prizeLabel: 'Hadiah ke-1',
-        drawnAt,
-      },
+    state = transition(state, { type: 'START_DRAW', lotId: 'L201', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    expect(state.phase).toBe('spinning');
+    expect(state.pendingWinner?.prizeLabel).toBe('Hadiah Hiburan #1');
+    expect(state.pendingWinner?.prizeId).toBe('small-1');
+    expect(state.pendingWinner?.round).toBe('small');
+    expect(state.activeLots).toEqual(['L202', 'L203']);
+
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    expect(state.phase).toBe('winner');
+    expect(state.winners).toHaveLength(1);
+    expect(state.smallPrizeCount).toBe(1);
+    expect(state.pendingWinner).toBeNull();
+    expect(state.winners[0]).toEqual({
+      lotId: 'L201',
+      prizeId: 'small-1',
+      prizeLabel: 'Hadiah Hiburan #1',
+      round: 'small',
+      drawnAt: '2026-08-19',
     });
-    expect(spinning).not.toBe(initial);
-    expect(Object.isFrozen(spinning)).toBe(true);
-    expect(Object.isFrozen(spinning.activeLots)).toBe(true);
+
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
+    expect(state.phase).toBe('idle');
+    expect(state.round).toBe('small');
+    expect(state.smallPrizeCount).toBe(1);
+
+    // Second small prize draw
+    state = transition(state, { type: 'START_DRAW', lotId: 'L202', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    expect(state.pendingWinner?.prizeLabel).toBe('Hadiah Hiburan #2');
+    expect(state.pendingWinner?.prizeId).toBe('small-2');
+
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    expect(state.winners).toHaveLength(2);
+    expect(state.smallPrizeCount).toBe(2);
+
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
+    expect(state.phase).toBe('idle');
+    expect(state.round).toBe('small');
   });
 
-  it('reveals one pending winner after spinning', () => {
-    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, prizes);
+  it('switches to main round, resets activeLots to fullPool, and sequences 3 main prizes strictly', () => {
+    let state = createInitialState(config, fullPool);
+    state = transition(state, { type: 'START_DRAW', lotId: 'L201', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
 
-    expect(winner).toEqual({
-      phase: 'winner',
-      activeLots: ['L201', 'L203'],
-      winners: [{ lotId: 'L202', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt }],
-      prizeIndex: 0,
-      pendingWinner: null,
-    });
+    // Switch to main round with full pool reset
+    state = transition(state, { type: 'SWITCH_TO_MAIN_ROUND', fullPool: ['L201', 'L202', 'L203'] }, MAIN_PRIZES);
+    expect(state.round).toBe('main');
+    expect(state.activeLots).toEqual(['L201', 'L202', 'L203']);
+    expect(state.mainPrizeIndex).toBe(0);
+    expect(state.winners).toHaveLength(1); // Preserves small round winners
+    expect(state.winners[0]?.round).toBe('small');
+
+    // Main Prize 1: Karpet
+    state = transition(state, { type: 'START_DRAW', lotId: 'L201', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    expect(state.pendingWinner?.prizeLabel).toBe('Karpet');
+    expect(state.pendingWinner?.prizeId).toBe('main-karpet');
+    expect(state.pendingWinner?.round).toBe('main');
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    expect(state.mainPrizeIndex).toBe(0);
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
+    expect(state.phase).toBe('idle');
+    expect(state.mainPrizeIndex).toBe(1);
+
+    // Main Prize 2: Magicom
+    state = transition(state, { type: 'START_DRAW', lotId: 'L202', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    expect(state.pendingWinner?.prizeLabel).toBe('Magicom');
+    expect(state.pendingWinner?.prizeId).toBe('main-magicom');
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    expect(state.mainPrizeIndex).toBe(1);
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
+    expect(state.phase).toBe('idle');
+    expect(state.mainPrizeIndex).toBe(2);
+
+    // Main Prize 3: Kipas Angin
+    state = transition(state, { type: 'START_DRAW', lotId: 'L203', drawnAt: '2026-08-19' }, MAIN_PRIZES);
+    expect(state.pendingWinner?.prizeLabel).toBe('Kipas Angin');
+    expect(state.pendingWinner?.prizeId).toBe('main-kipas');
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    expect(state.mainPrizeIndex).toBe(2);
+    state = transition(state, { type: 'ADVANCE' }, MAIN_PRIZES);
+    expect(state.phase).toBe('complete');
+    expect(state.mainPrizeIndex).toBe(3);
+    expect(state.winners).toHaveLength(4); // 1 small + 3 main
   });
 
-  it('advances to the next prize, then completes after the final prize', () => {
-    const firstWinner = transition(startDraw(), { type: 'REVEAL_WINNER' }, prizes);
-    const nextPrize = transition(firstWinner, { type: 'ADVANCE' }, prizes);
-    const secondWinner = transition(
-      transition(nextPrize, { type: 'START_DRAW', lotId: 'L201', drawnAt }, prizes),
-      { type: 'REVEAL_WINNER' },
-      prizes,
-    );
-
-    expect(nextPrize).toMatchObject({ phase: 'idle', prizeIndex: 1, pendingWinner: null });
-    expect(transition(secondWinner, { type: 'ADVANCE' }, prizes)).toMatchObject({
-      phase: 'complete',
-      prizeIndex: 2,
-      pendingWinner: null,
-    });
+  it('rejects SWITCH_TO_MAIN_ROUND while draw is spinning', () => {
+    const spinning = startDraw();
+    expect(() =>
+      transition(spinning, { type: 'SWITCH_TO_MAIN_ROUND', fullPool }, MAIN_PRIZES),
+    ).toThrow('Pengalihan babak tidak tersedia saat pengundian berlangsung.');
   });
 
   it('rejects invalid phase actions and a draw from an empty pool', () => {
     const spinning = startDraw();
     const noLots = createInitialState(config, []);
 
-    expect(() => transition(spinning, { type: 'START_DRAW', lotId: 'L201', drawnAt }, prizes)).toThrow(
+    expect(() => transition(spinning, { type: 'START_DRAW', lotId: 'L201', drawnAt }, MAIN_PRIZES)).toThrow(
       'Pengundian sudah berlangsung.',
     );
-    expect(() => transition(spinning, { type: 'ADVANCE' }, prizes)).toThrow(
+    expect(() => transition(spinning, { type: 'ADVANCE' }, MAIN_PRIZES)).toThrow(
       'Tidak dapat melanjutkan saat pengundian berlangsung.',
     );
-    expect(() => transition(noLots, { type: 'START_DRAW', lotId: 'L201', drawnAt }, prizes)).toThrow(
+    expect(() => transition(noLots, { type: 'START_DRAW', lotId: 'L201', drawnAt }, MAIN_PRIZES)).toThrow(
       'Tidak ada nomor kavling aktif untuk diundi.',
     );
   });
 
-  it('never accepts a lot that is not active, preventing repeat winners', () => {
-    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, prizes);
-    const nextPrize = transition(winner, { type: 'ADVANCE' }, prizes);
+  it('never accepts a lot that is not active, preventing repeat winners in same round', () => {
+    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    const nextPrize = transition(winner, { type: 'ADVANCE' }, MAIN_PRIZES);
 
     expect(() =>
-      transition(nextPrize, { type: 'START_DRAW', lotId: 'L202', drawnAt }, prizes),
+      transition(nextPrize, { type: 'START_DRAW', lotId: 'L202', drawnAt }, MAIN_PRIZES),
     ).toThrow('Nomor kavling yang dipilih tidak aktif.');
   });
 
   it('rejects reset while a selected winner is pending', () => {
     const spinning = startDraw();
 
-    expect(() => transition(spinning, { type: 'RESET', fullPool }, prizes)).toThrow(
+    expect(() => transition(spinning, { type: 'RESET', fullPool }, MAIN_PRIZES)).toThrow(
       'Pengaturan ulang tidak tersedia saat pengundian berlangsung.',
     );
   });
 
-  it('resets the supplied full pool and all event progress from a stable phase', () => {
-    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, prizes);
-    const reset = transition(winner, { type: 'RESET', fullPool }, prizes);
+  it('resets the supplied full pool and all event progress back to small round', () => {
+    const winner = transition(startDraw(), { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+    const reset = transition(winner, { type: 'RESET', fullPool }, MAIN_PRIZES);
 
     expect(reset).toEqual({
       phase: 'idle',
+      round: 'small',
       activeLots: fullPool,
       winners: [],
-      prizeIndex: 0,
+      smallPrizeCount: 0,
+      mainPrizeIndex: 0,
       pendingWinner: null,
     });
   });
@@ -125,24 +173,90 @@ describe('raffle state transitions', () => {
     const initial = createInitialState(config, fullPool);
     const unknownAction = { type: 'BOGUS' } as unknown as import('./types').RaffleAction;
 
-    expect(() => transition(initial, unknownAction, prizes)).toThrow(
+    expect(() => transition(initial, unknownAction, MAIN_PRIZES)).toThrow(
       'Aksi pengundian tidak dikenal: BOGUS.',
     );
   });
 });
 
-describe('stabilizeRestoredState', () => {
-  it('promotes a persisted pending winner without selecting another lot', () => {
-    const spinning = startDraw();
-    const restored = stabilizeRestoredState(spinning, prizes);
+describe('forfeit transition', () => {
+  it('forfeits small prize winner, decrements smallPrizeCount, and leaves lot permanently removed', () => {
+    let state = createInitialState(config, ['A1', 'A2', 'A3']);
+    state = transition(state, { type: 'START_DRAW', lotId: 'A2', drawnAt: '2026-08-18' }, MAIN_PRIZES);
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
 
-    expect(restored).toEqual(transition(spinning, { type: 'REVEAL_WINNER' }, prizes));
+    expect(state.phase).toBe('winner');
+    expect(state.winners.length).toBe(1);
+    expect(state.smallPrizeCount).toBe(1);
+    expect(state.activeLots).not.toContain('A2');
+
+    state = transition(state, { type: 'FORFEIT' }, MAIN_PRIZES);
+
+    expect(state.phase).toBe('idle');
+    expect(state.winners.length).toBe(0);
+    expect(state.smallPrizeCount).toBe(0);
+    expect(state.activeLots).not.toContain('A2'); // Permanently discarded from pool
+  });
+
+  it('forfeits main prize winner, preserves mainPrizeIndex, and leaves lot permanently removed', () => {
+    let state = createInitialState(config, ['A1', 'A2', 'A3']);
+    state = transition(state, { type: 'SWITCH_TO_MAIN_ROUND', fullPool: ['A1', 'A2', 'A3'] }, MAIN_PRIZES);
+    state = transition(state, { type: 'START_DRAW', lotId: 'A2', drawnAt: '2026-08-18' }, MAIN_PRIZES);
+    state = transition(state, { type: 'REVEAL_WINNER' }, MAIN_PRIZES);
+
+    expect(state.phase).toBe('winner');
+    expect(state.winners.length).toBe(1);
+    expect(state.mainPrizeIndex).toBe(0);
+    expect(state.activeLots).not.toContain('A2');
+
+    state = transition(state, { type: 'FORFEIT' }, MAIN_PRIZES);
+
+    expect(state.phase).toBe('idle');
+    expect(state.winners.length).toBe(0);
+    expect(state.mainPrizeIndex).toBe(0); // Still 0, so Karpet can be redrawn
+    expect(state.activeLots).not.toContain('A2'); // Permanently discarded from main pool
+  });
+
+  it('throws error if FORFEIT is called outside winner phase', () => {
+    const state = createInitialState(config, ['A1']);
+    expect(() => transition(state, { type: 'FORFEIT' }, MAIN_PRIZES)).toThrow(
+      'Hanya bisa hangus setelah pemenang muncul.',
+    );
+  });
+});
+
+describe('stabilizeRestoredState', () => {
+  it('promotes a persisted pending winner without selecting another lot in small round', () => {
+    const spinning = startDraw();
+    const restored = stabilizeRestoredState(spinning, MAIN_PRIZES);
+
+    expect(restored).toEqual(transition(spinning, { type: 'REVEAL_WINNER' }, MAIN_PRIZES));
     expect(restored.activeLots).toEqual(['L201', 'L203']);
+    expect(restored.smallPrizeCount).toBe(1);
+    expect(restored.round).toBe('small');
+  });
+
+  it('promotes a persisted pending winner in main round', () => {
+    let state = createInitialState(config, fullPool);
+    state = transition(state, { type: 'SWITCH_TO_MAIN_ROUND', fullPool }, MAIN_PRIZES);
+    const spinning = transition(state, { type: 'START_DRAW', lotId: 'L201', drawnAt }, MAIN_PRIZES);
+    const restored = stabilizeRestoredState(spinning, MAIN_PRIZES);
+
+    expect(restored.phase).toBe('winner');
+    expect(restored.round).toBe('main');
+    expect(restored.mainPrizeIndex).toBe(0);
+    expect(restored.winners[0]).toEqual({
+      lotId: 'L201',
+      prizeId: 'main-karpet',
+      prizeLabel: 'Karpet',
+      round: 'main',
+      drawnAt,
+    });
   });
 
   it('returns a new immutable state even when restoration needs no stabilization', () => {
     const idle = createInitialState(config, fullPool);
-    const restored = stabilizeRestoredState(idle, prizes);
+    const restored = stabilizeRestoredState(idle, MAIN_PRIZES);
 
     expect(restored).toEqual(idle);
     expect(restored).not.toBe(idle);
@@ -156,7 +270,7 @@ describe('stabilizeRestoredState', () => {
       pendingWinner: null,
     };
 
-    expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(malformed, MAIN_PRIZES)).toThrow(
       'Data pengundian tersimpan tidak memiliki pemenang tertunda.',
     );
   });
@@ -165,32 +279,39 @@ describe('stabilizeRestoredState', () => {
     const spinning = startDraw();
     const malformed: RaffleState = { ...spinning, phase: 'idle' };
 
-    expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(malformed, MAIN_PRIZES)).toThrow(
       'Pemenang tertunda hanya diizinkan saat pengundian berlangsung.',
     );
   });
 
-  it('rejects out-of-range prize indexes for restored states', () => {
-    const malformed: RaffleState = { ...createInitialState(config, fullPool), prizeIndex: 2 };
+  it('rejects out-of-range main prize indexes for restored states', () => {
+    const malformed: RaffleState = {
+      ...createInitialState(config, fullPool),
+      round: 'main',
+      mainPrizeIndex: 5,
+    };
 
-    expect(() => stabilizeRestoredState(malformed, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(malformed, MAIN_PRIZES)).toThrow(
       'Indeks hadiah tersimpan tidak valid.',
     );
   });
 
-  it('rejects winner histories whose count does not match the phase and prize index', () => {
-    const initial = createInitialState(config, fullPool);
-    const missingWinner: RaffleState = { ...initial, phase: 'winner' };
-    const skippedIdleWinner: RaffleState = { ...initial, prizeIndex: 1 };
-    const emptyComplete: RaffleState = { ...initial, phase: 'complete', prizeIndex: 2 };
+  it('rejects winner histories whose count does not match the phase and prize index in main round', () => {
+    const initialMain: RaffleState = {
+      ...createInitialState(config, fullPool),
+      round: 'main',
+    };
+    const missingWinner: RaffleState = { ...initialMain, phase: 'winner' };
+    const skippedIdleWinner: RaffleState = { ...initialMain, mainPrizeIndex: 1 };
+    const emptyComplete: RaffleState = { ...initialMain, phase: 'complete', mainPrizeIndex: 3 };
 
-    expect(() => stabilizeRestoredState(missingWinner, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(missingWinner, MAIN_PRIZES)).toThrow(
       'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
     );
-    expect(() => stabilizeRestoredState(skippedIdleWinner, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(skippedIdleWinner, MAIN_PRIZES)).toThrow(
       'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
     );
-    expect(() => stabilizeRestoredState(emptyComplete, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(emptyComplete, MAIN_PRIZES)).toThrow(
       'Jumlah pemenang tersimpan tidak cocok dengan kemajuan hadiah.',
     );
   });
@@ -198,128 +319,43 @@ describe('stabilizeRestoredState', () => {
   it('rejects winner histories whose prize order differs from the configured order', () => {
     const wrongPrizeOrder: RaffleState = {
       ...createInitialState(config, ['L202', 'L203']),
-      prizeIndex: 1,
-      winners: [{ lotId: 'L201', prizeId: 'hadiah-2', prizeLabel: 'Hadiah ke-2', drawnAt }],
+      round: 'main',
+      mainPrizeIndex: 1,
+      winners: [{ lotId: 'L201', prizeId: 'main-magicom', prizeLabel: 'Magicom', round: 'main', drawnAt }],
     };
 
-    expect(() => stabilizeRestoredState(wrongPrizeOrder, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(wrongPrizeOrder, MAIN_PRIZES)).toThrow(
       'Urutan hadiah pemenang tersimpan tidak cocok dengan konfigurasi.',
     );
   });
 
-  it('rejects restored pools and histories with duplicate or overlapping lots', () => {
+  it('rejects restored pools and histories with duplicate lots in the same round', () => {
     const duplicateActiveLots: RaffleState = {
       ...createInitialState(config, fullPool),
       activeLots: ['L201', 'L201'],
     };
     const activeWinnerOverlap: RaffleState = {
       ...createInitialState(config, fullPool),
-      winners: [{ lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt }],
+      smallPrizeCount: 1,
+      winners: [{ lotId: 'L201', prizeId: 'small-1', prizeLabel: 'Hadiah Hiburan #1', round: 'small', drawnAt }],
     };
     const duplicateWinnerLots: RaffleState = {
-      ...createInitialState(config, ['L202', 'L203']),
+      ...createInitialState(config, ['L203']),
+      smallPrizeCount: 2,
       winners: [
-        { lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt },
-        { lotId: 'L201', prizeId: 'hadiah-1', prizeLabel: 'Hadiah ke-1', drawnAt },
+        { lotId: 'L201', prizeId: 'small-1', prizeLabel: 'Hadiah Hiburan #1', round: 'small', drawnAt },
+        { lotId: 'L201', prizeId: 'small-2', prizeLabel: 'Hadiah Hiburan #2', round: 'small', drawnAt },
       ],
     };
 
-    expect(() => stabilizeRestoredState(duplicateActiveLots, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(duplicateActiveLots, MAIN_PRIZES)).toThrow(
       'Nomor kavling aktif tersimpan mengandung duplikat.',
     );
-    expect(() => stabilizeRestoredState(activeWinnerOverlap, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(activeWinnerOverlap, MAIN_PRIZES)).toThrow(
       'Nomor kavling pemenang masih aktif.',
     );
-    expect(() => stabilizeRestoredState(duplicateWinnerLots, prizes)).toThrow(
+    expect(() => stabilizeRestoredState(duplicateWinnerLots, MAIN_PRIZES)).toThrow(
       'Riwayat pemenang tersimpan mengandung nomor kavling duplikat.',
     );
   });
-
-  it('rejects a pending winner that was not removed or does not match the active prize', () => {
-    const spinning = startDraw();
-    const pendingWinner = spinning.pendingWinner;
-
-    if (pendingWinner === null) {
-      throw new Error('Fixture pengundian tidak memiliki pemenang tertunda.');
-    }
-
-    const activePendingLot: RaffleState = {
-      ...spinning,
-      activeLots: [...spinning.activeLots, pendingWinner.lotId],
-    };
-    const wrongPendingPrize: RaffleState = {
-      ...spinning,
-      pendingWinner: { ...pendingWinner, prizeId: 'hadiah-2', prizeLabel: 'Hadiah ke-2' },
-    };
-    const pendingAlreadyWon: RaffleState = {
-      ...spinning,
-      winners: [pendingWinner],
-    };
-
-    expect(() => stabilizeRestoredState(activePendingLot, prizes)).toThrow(
-      'Pemenang tertunda masih aktif.',
-    );
-    expect(() => stabilizeRestoredState(wrongPendingPrize, prizes)).toThrow(
-      'Pemenang tertunda tidak cocok dengan hadiah saat ini.',
-    );
-    expect(() => stabilizeRestoredState(pendingAlreadyWon, prizes)).toThrow(
-      'Pemenang tertunda sudah tercatat sebagai pemenang.',
-    );
-  });
-
-  it('retains valid zero-prize completion and reset states', () => {
-    const zeroPrizeConfig: EventConfig = { ...config, prizes: [] };
-    const initial = createInitialState(zeroPrizeConfig, fullPool);
-    const restored = stabilizeRestoredState(initial, zeroPrizeConfig.prizes);
-    const reset = transition(restored, { type: 'RESET', fullPool }, zeroPrizeConfig.prizes);
-
-    expect(initial).toMatchObject({ phase: 'complete', prizeIndex: 0, winners: [] });
-    expect(restored).toEqual(initial);
-    expect(reset).toEqual(initial);
-  });
 });
-
-describe('forfeit transition', () => {
-  it('forfeits the current winner and does not increment prizeIndex', () => {
-    const testPrizes = [{ id: '1', label: 'Hadiah 1' }, { id: '2', label: 'Hadiah 2' }];
-    const testConfig: EventConfig = {
-      id: 'test',
-      title: 'Test',
-      neighborhood: 'RT 01',
-      prizes: testPrizes,
-      lotRanges: [],
-    };
-    let state = createInitialState(testConfig, ['A1', 'A2', 'A3']);
-    state = transition(state, { type: 'START_DRAW', lotId: 'A2', drawnAt: '2026-08-18' }, testPrizes);
-    state = transition(state, { type: 'REVEAL_WINNER' }, testPrizes);
-
-    expect(state.phase).toBe('winner');
-    expect(state.winners.length).toBe(1);
-    expect(state.prizeIndex).toBe(0);
-    expect(state.activeLots).not.toContain('A2');
-
-    state = transition(state, { type: 'FORFEIT' }, testPrizes);
-
-    expect(state.phase).toBe('idle');
-    expect(state.winners.length).toBe(0);
-    expect(state.prizeIndex).toBe(0);
-    expect(state.activeLots).not.toContain('A2'); // Permanently discarded
-  });
-
-  it('throws error if FORFEIT is called outside winner phase', () => {
-    const testPrizes = [{ id: '1', label: 'Hadiah 1' }];
-    const testConfig: EventConfig = {
-      id: 'test',
-      title: 'Test',
-      neighborhood: 'RT 01',
-      prizes: testPrizes,
-      lotRanges: [],
-    };
-    const state = createInitialState(testConfig, ['A1']);
-
-    expect(() => transition(state, { type: 'FORFEIT' }, testPrizes)).toThrowError(
-      'Hanya bisa hangus setelah pemenang muncul.',
-    );
-  });
-});
-

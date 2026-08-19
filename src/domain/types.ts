@@ -20,18 +20,23 @@ export interface EventConfig {
 
 export type RafflePhase = 'idle' | 'spinning' | 'winner' | 'complete';
 
+export type RaffleRound = 'small' | 'main';
+
 export interface WinnerRecord {
   readonly lotId: string;
   readonly prizeId: string;
   readonly prizeLabel: string;
+  readonly round: RaffleRound;
   readonly drawnAt: string;
 }
 
 export interface RaffleState {
   readonly phase: RafflePhase;
+  readonly round: RaffleRound;
   readonly activeLots: readonly string[];
   readonly winners: readonly WinnerRecord[];
-  readonly prizeIndex: number;
+  readonly smallPrizeCount: number;
+  readonly mainPrizeIndex: number;
   readonly pendingWinner: WinnerRecord | null;
 }
 
@@ -44,5 +49,5 @@ export type RaffleAction =
   | { readonly type: 'REVEAL_WINNER' }
   | { readonly type: 'ADVANCE' }
   | { readonly type: 'FORFEIT' }
+  | { readonly type: 'SWITCH_TO_MAIN_ROUND'; readonly fullPool: readonly string[] }
   | { readonly type: 'RESET'; readonly fullPool: readonly string[] };
-

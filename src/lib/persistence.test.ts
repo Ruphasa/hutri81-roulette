@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EventConfig, RaffleState } from '../domain/types';
+import { MAIN_PRIZES } from '../config/event';
 import {
   STORAGE_KEY,
   clearRaffleState,
@@ -16,48 +17,68 @@ const baseConfig: EventConfig = {
     { prefix: 'L', start: 201, end: 250 },
     { prefix: 'K', start: 301, end: 450 },
   ],
-  prizes: [
-    { id: 'hadiah-1', label: 'Hadiah ke-1' },
-    { id: 'hadiah-2', label: 'Hadiah ke-2' },
-    { id: 'hadiah-3', label: 'Hadiah ke-3' },
-    { id: 'hadiah-4', label: 'Hadiah ke-4' },
-    { id: 'hadiah-5', label: 'Hadiah ke-5' },
-  ],
+  prizes: MAIN_PRIZES,
 };
 
-const idleState: RaffleState = {
+const idleSmallState: RaffleState = {
   phase: 'idle',
+  round: 'small',
   activeLots: ['L201', 'L202', 'K301'],
   winners: [],
-  prizeIndex: 0,
+  smallPrizeCount: 0,
+  mainPrizeIndex: 0,
   pendingWinner: null,
 };
 
-const spinningState: RaffleState = {
+const spinningSmallState: RaffleState = {
   phase: 'spinning',
+  round: 'small',
   activeLots: ['L201', 'K301'],
   winners: [],
-  prizeIndex: 0,
+  smallPrizeCount: 0,
+  mainPrizeIndex: 0,
   pendingWinner: {
     lotId: 'L202',
-    prizeId: 'hadiah-1',
-    prizeLabel: 'Hadiah ke-1',
+    prizeId: 'small-1',
+    prizeLabel: 'Hadiah Hiburan #1',
+    round: 'small',
     drawnAt: '2026-08-17T12:00:00.000Z',
   },
 };
 
-const winnerState: RaffleState = {
+const winnerSmallState: RaffleState = {
   phase: 'winner',
+  round: 'small',
   activeLots: ['L201', 'K301'],
   winners: [
     {
       lotId: 'L202',
-      prizeId: 'hadiah-1',
-      prizeLabel: 'Hadiah ke-1',
+      prizeId: 'small-1',
+      prizeLabel: 'Hadiah Hiburan #1',
+      round: 'small',
       drawnAt: '2026-08-17T12:00:00.000Z',
     },
   ],
-  prizeIndex: 0,
+  smallPrizeCount: 1,
+  mainPrizeIndex: 0,
+  pendingWinner: null,
+};
+
+const idleMainState: RaffleState = {
+  phase: 'idle',
+  round: 'main',
+  activeLots: ['L201', 'L202', 'K301'],
+  winners: [
+    {
+      lotId: 'L202',
+      prizeId: 'small-1',
+      prizeLabel: 'Hadiah Hiburan #1',
+      round: 'small',
+      drawnAt: '2026-08-17T12:00:00.000Z',
+    },
+  ],
+  smallPrizeCount: 1,
+  mainPrizeIndex: 0,
   pendingWinner: null,
 };
 
@@ -113,8 +134,9 @@ describe('eventFingerprint', () => {
     const fpModifiedOrder = eventFingerprint({
       ...baseConfig,
       prizes: [
-        { id: 'hadiah-2', label: 'Hadiah ke-2' },
-        { id: 'hadiah-1', label: 'Hadiah ke-1' },
+        { id: 'main-magicom', label: 'Magicom' },
+        { id: 'main-karpet', label: 'Karpet' },
+        { id: 'main-kipas', label: 'Kipas Angin' },
       ],
     });
     const fpModifiedPrizes = eventFingerprint({
@@ -129,7 +151,7 @@ describe('eventFingerprint', () => {
 describe('saveRaffleState', () => {
   it('saves the raffle state inside the versioned envelope to storage', () => {
     const storage = createMockStorage();
-    const result = saveRaffleState(storage, baseConfig, idleState);
+    const result = saveRaffleState(storage, baseConfig, idleSmallState);
 
     expect(result).toEqual({ status: 'saved' });
 
@@ -140,7 +162,7 @@ describe('saveRaffleState', () => {
     expect(parsed).toEqual({
       schemaVersion: 1,
       eventFingerprint: eventFingerprint(baseConfig),
-      payload: idleState,
+      payload: idleSmallState,
     });
   });
 
@@ -153,7 +175,7 @@ describe('saveRaffleState', () => {
       removeItem: () => {},
     };
 
-    const result = saveRaffleState(failingStorage, baseConfig, idleState);
+    const result = saveRaffleState(failingStorage, baseConfig, idleSmallState);
     expect(result).toEqual({
       status: 'failed',
       reason: 'QuotaExceededError: LocalStorage quota exceeded',
@@ -178,12 +200,12 @@ describe('loadRaffleState', () => {
 
   it('restores a valid idle state successfully', () => {
     const storage = createMockStorage();
-    saveRaffleState(storage, baseConfig, idleState);
+    saveRaffleState(storage, baseConfig, idleSmallState);
 
     const result = loadRaffleState(storage, baseConfig);
     expect(result).toEqual({
       status: 'restored',
-      state: idleState,
+      state: idleSmallState,
     });
     if (result.status === 'restored') {
       expect(Object.isFrozen(result.state)).toBe(true);
@@ -193,34 +215,48 @@ describe('loadRaffleState', () => {
 
   it('restores a valid winner state successfully', () => {
     const storage = createMockStorage();
-    saveRaffleState(storage, baseConfig, winnerState);
+    saveRaffleState(storage, baseConfig, winnerSmallState);
 
     const result = loadRaffleState(storage, baseConfig);
     expect(result).toEqual({
       status: 'restored',
-      state: winnerState,
+      state: winnerSmallState,
+    });
+  });
+
+  it('restores a valid main round state successfully', () => {
+    const storage = createMockStorage();
+    saveRaffleState(storage, baseConfig, idleMainState);
+
+    const result = loadRaffleState(storage, baseConfig);
+    expect(result).toEqual({
+      status: 'restored',
+      state: idleMainState,
     });
   });
 
   it('stabilizes an interrupted spinning state into a winner state upon recovery', () => {
     const storage = createMockStorage();
-    saveRaffleState(storage, baseConfig, spinningState);
+    saveRaffleState(storage, baseConfig, spinningSmallState);
 
     const result = loadRaffleState(storage, baseConfig);
     expect(result).toEqual({
       status: 'restored',
       state: {
         phase: 'winner',
+        round: 'small',
         activeLots: ['L201', 'K301'],
         winners: [
           {
             lotId: 'L202',
-            prizeId: 'hadiah-1',
-            prizeLabel: 'Hadiah ke-1',
+            prizeId: 'small-1',
+            prizeLabel: 'Hadiah Hiburan #1',
+            round: 'small',
             drawnAt: '2026-08-17T12:00:00.000Z',
           },
         ],
-        prizeIndex: 0,
+        smallPrizeCount: 1,
+        mainPrizeIndex: 0,
         pendingWinner: null,
       },
     });
@@ -250,7 +286,7 @@ describe('loadRaffleState', () => {
     const envelopeV2 = {
       schemaVersion: 2,
       eventFingerprint: eventFingerprint(baseConfig),
-      payload: idleState,
+      payload: idleSmallState,
     };
     const storage = createMockStorage({ [STORAGE_KEY]: JSON.stringify(envelopeV2) });
     const result = loadRaffleState(storage, baseConfig);
@@ -267,7 +303,7 @@ describe('loadRaffleState', () => {
       id: 'other-event-config',
     };
     const storage = createMockStorage();
-    saveRaffleState(storage, otherConfig, idleState);
+    saveRaffleState(storage, otherConfig, idleSmallState);
     expect(storage.getItem(STORAGE_KEY)).not.toBeNull();
 
     const result = loadRaffleState(storage, baseConfig);
@@ -281,9 +317,11 @@ describe('loadRaffleState', () => {
       eventFingerprint: eventFingerprint(baseConfig),
       payload: {
         phase: 'idle',
+        round: 'small',
         activeLots: ['L201', 'L201'], // duplicate lot violation
         winners: [],
-        prizeIndex: 0,
+        smallPrizeCount: 0,
+        mainPrizeIndex: 0,
         pendingWinner: null,
       },
     };
@@ -318,7 +356,7 @@ describe('loadRaffleState', () => {
 describe('clearRaffleState', () => {
   it('removes the saved state key from storage', () => {
     const storage = createMockStorage();
-    saveRaffleState(storage, baseConfig, idleState);
+    saveRaffleState(storage, baseConfig, idleSmallState);
     expect(storage.getItem(STORAGE_KEY)).not.toBeNull();
 
     clearRaffleState(storage);

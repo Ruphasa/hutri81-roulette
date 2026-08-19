@@ -1,4 +1,10 @@
-import type { EventConfig } from '../domain/types';
+import type { EventConfig, Prize } from '../domain/types';
+
+export const MAIN_PRIZES: readonly Prize[] = [
+  { id: 'main-karpet', label: 'Karpet' },
+  { id: 'main-magicom', label: 'Magicom' },
+  { id: 'main-kipas', label: 'Kipas Angin' },
+];
 
 export const EVENT_CONFIG: EventConfig = {
   id: 'hutri81-griya-shanta-rt08',
@@ -13,11 +19,5 @@ export const EVENT_CONFIG: EventConfig = {
     { prefix: 'K-', start: 333, end: 412 },
     { prefix: 'L-', start: 301, end: 315 },
   ],
-  prizes: [
-    { id: 'hadiah-1', label: 'Hadiah ke-1' },
-    { id: 'hadiah-2', label: 'Hadiah ke-2' },
-    { id: 'hadiah-3', label: 'Hadiah ke-3' },
-    { id: 'hadiah-4', label: 'Hadiah ke-4' },
-    { id: 'hadiah-5', label: 'Hadiah ke-5' },
-  ],
+  prizes: MAIN_PRIZES,
 };
