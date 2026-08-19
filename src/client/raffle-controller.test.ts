@@ -4,6 +4,7 @@ import { getCurrentRotation } from './roulette-motion';
 import type { EventConfig } from '../domain/types';
 import type { SoundEngine } from './sound-effects';
 import type { ConfettiManager } from './confetti';
+import { eventFingerprint } from '../lib/persistence';
 
 describe('Raffle Controller Two-Round Flow & Intermission Integration', () => {
   let root: HTMLElement;
@@ -942,5 +943,114 @@ describe('Raffle Controller Two-Round Flow & Intermission Integration', () => {
     await Promise.resolve();
 
     expect(deps.selectWinner).toHaveBeenCalledTimes(2);
+  });
+
+  describe('Header Switch Round Button & Operator Flow Edge Cases', () => {
+    it('discovers switch round button using .switch-round-btn class fallback when data-role is missing', () => {
+      document.body.innerHTML = `
+        <div data-raffle-app>
+          <div class="top-right-stats">
+            <div class="round-badge">BABAK HADIAH HIBURAN</div>
+            <button type="button" class="switch-round-btn">🏆 Babak Utama ➔</button>
+          </div>
+          <dialog data-role="intermission-dialog" class="intermission-dialog">
+            <div data-role="intermission-winners" class="intermission-winners-list"></div>
+            <button type="button" data-role="start-main-round-btn">Mulai Hadiah Utama</button>
+          </dialog>
+          <div data-role="winner-history"></div>
+        </div>
+      `;
+      const customRoot = document.querySelector('[data-raffle-app]') as HTMLElement;
+      const customSwitchBtn = customRoot.querySelector('.switch-round-btn') as HTMLButtonElement;
+      const customIntermission = customRoot.querySelector('.intermission-dialog') as HTMLDialogElement;
+      customIntermission.showModal = vi.fn().mockImplementation(() => { customIntermission.setAttribute('open', ''); });
+
+      const clean = mountRaffleApp(customRoot, deps);
+      expect(customSwitchBtn.hidden).toBe(false);
+      expect(customSwitchBtn.disabled).toBe(false);
+
+      customSwitchBtn.click();
+      expect(customIntermission.showModal).toHaveBeenCalled();
+      clean();
+    });
+
+    it('intermission dialog open state prevents Enter key from triggering draw or advance', async () => {
+      unmount = mountRaffleApp(root, deps);
+      const intermissionDialog = root.querySelector('[data-role="intermission-dialog"]') as HTMLDialogElement;
+      intermissionDialog.setAttribute('open', '');
+
+      // Try pressing Enter while dialog is open
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+      expect(deps.selectWinner).not.toHaveBeenCalled();
+      expect(root.getAttribute('data-phase')).toBe('IDLE');
+    });
+
+    it('switch round button click does nothing when in main round or during spinning', async () => {
+      deps = {
+        ...deps,
+        animateRoulette: vi.fn().mockReturnValue(new Promise(() => {})), // never resolving spin
+      };
+      unmount = mountRaffleApp(root, deps);
+      const drawBtn = root.querySelector('[data-role="draw"]') as HTMLButtonElement;
+      const switchRoundBtn = root.querySelector('[data-role="switch-round-button"]') as HTMLButtonElement;
+      const intermissionDialog = root.querySelector('[data-role="intermission-dialog"]') as HTMLDialogElement;
+      intermissionDialog.showModal = vi.fn();
+
+      // Trigger spin
+      drawBtn.click();
+      expect(root.getAttribute('data-phase')).toBe('SPINNING');
+
+      // Click switch round button while spinning
+      switchRoundBtn.click();
+      expect(intermissionDialog.showModal).not.toHaveBeenCalled();
+    });
+
+    it('restoring state already in main round keeps switch round button hidden and disabled', () => {
+      const mainStateEnvelope = {
+        schemaVersion: 1,
+        eventFingerprint: '94e2a3b04a9900ec', // calculated or matched via mockConfig
+        payload: {
+          phase: 'idle',
+          round: 'main',
+          activeLots: ['A1', 'A2', 'A3', 'A4', 'A5'],
+          winners: [{ lotId: 'A1', prizeId: 'small-1', prizeLabel: 'Hadiah Hiburan #1', round: 'small', drawnAt: '2026-08-18T10:00:00Z' }],
+          smallPrizeCount: 1,
+          mainPrizeIndex: 0,
+          pendingWinner: null,
+        },
+      };
+
+      // Compute valid fingerprint by creating initial state or importing fingerprint fn
+      mainStateEnvelope.eventFingerprint = eventFingerprint(mockConfig);
+      mockStorage['hutri81-raffle:v1'] = JSON.stringify(mainStateEnvelope);
+
+      unmount = mountRaffleApp(root, deps);
+      const switchRoundBtn = root.querySelector('[data-role="switch-round-button"]') as HTMLButtonElement;
+      const roundBadge = root.querySelector('[data-role="round-badge"]') as HTMLElement;
+      const prizePosition = root.querySelector('[data-role="prize-position"]') as HTMLElement;
+
+      expect(switchRoundBtn.hidden).toBe(true);
+      expect(switchRoundBtn.disabled).toBe(true);
+      expect(roundBadge.textContent).toBe('BABAK HADIAH UTAMA');
+      expect(roundBadge.classList.contains('gold')).toBe(true);
+      expect(prizePosition.textContent).toBe('HADIAH UTAMA #1: Karpet');
+    });
+
+    it('unmount cleans up switch round and start main round event listeners', () => {
+      unmount = mountRaffleApp(root, deps);
+      const switchRoundBtn = root.querySelector('[data-role="switch-round-button"]') as HTMLButtonElement;
+      const startMainRoundBtn = root.querySelector('[data-role="start-main-round-btn"]') as HTMLButtonElement;
+      const intermissionDialog = root.querySelector('[data-role="intermission-dialog"]') as HTMLDialogElement;
+      intermissionDialog.showModal = vi.fn();
+
+      unmount();
+
+      switchRoundBtn.click();
+      expect(intermissionDialog.showModal).not.toHaveBeenCalled();
+
+      startMainRoundBtn.click();
+      expect(deps.soundEngine?.playFanfare).not.toHaveBeenCalled();
+    });
   });
 });
