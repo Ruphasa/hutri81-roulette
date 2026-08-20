@@ -45,7 +45,7 @@ describe('Global Styles and Stage Mode 70/30 Layout', () => {
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*position:\s*absolute;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*width:\s*100%;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*height:\s*100%;/);
-    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(78%\s+0,\s*100%\s+0,\s*100%\s+80%,\s*65%\s+100%\);/);
+    expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*clip-path:\s*polygon\(69%\s+0,\s*100%\s+0,\s*100%\s+85%,\s*54%\s+100%\);/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*z-index:\s*2;/);
     expect(css).toMatch(/\.bg-cream-split\s*\{[\s\S]*overflow:\s*hidden;/);
   });
