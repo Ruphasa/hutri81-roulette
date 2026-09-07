@@ -461,6 +461,14 @@ body {
   cursor: not-allowed;
 }
 
+/* While the wheel spins the primary button becomes "LEWATI PUTARAN" — a
+   different action, so it reads as a different button. */
+[data-phase='SPINNING'] .skew-btn[data-role='spin-button'] {
+  background: var(--color-black);
+  color: var(--color-gold);
+  box-shadow: 4px 4px 0px var(--color-gold);
+}
+
 .primary-actions {
   display: flex;
   gap: 1.5vw;

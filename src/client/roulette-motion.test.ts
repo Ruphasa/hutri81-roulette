@@ -3,6 +3,8 @@ import {
   animateRoulette,
   getCurrentRotation,
   resetCurrentRotation,
+  skipRoulette,
+  isRouletteSpinning,
   DEFAULT_ROULETTE_DURATION_MS,
   REDUCED_MOTION_DURATION_MS
 } from './roulette-motion';
@@ -44,6 +46,34 @@ describe('animateRoulette', () => {
     expect(readout.textContent).toBe(winner);
     expect(getCurrentRotation()).toBeGreaterThan(0);
     expect(wheel.style.transform).toContain('rotate');
+  });
+
+  it('skipRoulette lands the wheel on the winner before the spin duration elapses', async () => {
+    const activeLots = ['A1', 'A2', 'A3'];
+    const winner = 'A2';
+
+    expect(isRouletteSpinning()).toBe(false);
+
+    const promise = animateRoulette({
+      wheel,
+      readout,
+      activeLots,
+      winner,
+      reducedMotion: false,
+      durationMs: 60000 // Would never finish inside the test on its own
+    });
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(isRouletteSpinning()).toBe(true);
+    expect(skipRoulette()).toBe(true);
+
+    await promise;
+
+    expect(readout.textContent).toBe(winner);
+    expect(getCurrentRotation()).toBeGreaterThan(0);
+    expect(wheel.style.transform).toContain(`rotate(${getCurrentRotation()}deg)`);
+    expect(isRouletteSpinning()).toBe(false);
+    expect(skipRoulette()).toBe(false);
   });
 
   it('resolves immediately to the winner for reduced motion, skipping rapid cycling', async () => {

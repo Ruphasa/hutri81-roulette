@@ -5,7 +5,11 @@ import { loadRaffleState, saveRaffleState, clearRaffleState } from '../lib/persi
 import type { EventConfig, RaffleState, WinnerRecord } from '../domain/types';
 import { EVENT_CONFIG } from '../config/event';
 import { selectWinner as defaultSelectWinner } from '../domain/random-selection';
-import { animateRoulette as defaultAnimateRoulette, resetCurrentRotation } from './roulette-motion';
+import {
+  animateRoulette as defaultAnimateRoulette,
+  resetCurrentRotation,
+  skipRoulette as defaultSkipRoulette
+} from './roulette-motion';
 import { createSoundEngine, type SoundEngine } from './sound-effects';
 import { createConfetti, type ConfettiManager } from './confetti';
 
@@ -13,6 +17,7 @@ export interface ControllerDependencies {
   readonly config?: EventConfig | undefined;
   readonly selectWinner?: ((activeLots: readonly string[]) => string) | undefined;
   readonly animateRoulette?: ((options: any) => Promise<void>) | undefined;
+  readonly skipRoulette?: (() => boolean) | undefined;
   readonly storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | undefined;
   readonly now?: (() => string) | undefined;
   readonly reducedMotion?: (() => boolean) | undefined;
@@ -38,6 +43,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
   const config = deps?.config || EVENT_CONFIG;
   const selectWinner = deps?.selectWinner || defaultSelectWinner;
   const animateRoulette = deps?.animateRoulette || defaultAnimateRoulette;
+  const skipRoulette = deps?.skipRoulette || defaultSkipRoulette;
   const storage = deps?.storage || window.localStorage;
   const now = deps?.now || (() => new Date().toISOString());
   const reducedMotion = deps?.reducedMotion || (() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -49,6 +55,7 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     prizePosition: root.querySelector('[data-role="prize-position"]') as HTMLElement | null,
     drawBtn: (root.querySelector('[data-role="spin-button"]') || root.querySelector('[data-role="draw"]')) as HTMLButtonElement | null,
     forfeitBtn: root.querySelector('[data-role="forfeit-button"]') as HTMLButtonElement | null,
+    btnSubtext: (root.querySelector('[data-role="btn-subtext"]') || root.querySelector('.btn-subtext')) as HTMLElement | null,
     advanceBtn: root.querySelector('[data-role="advance"]') as HTMLButtonElement | null,
     switchRoundBtn: (root.querySelector('[data-role="switch-round-button"]') || root.querySelector('.switch-round-btn')) as HTMLButtonElement | null,
     roundBadge: (root.querySelector('[data-role="round-badge"]') || root.querySelector('.round-badge')) as HTMLElement | null,
@@ -191,8 +198,8 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
           els.drawBtn.hidden = false;
           if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         } else if (currentUiPhase === 'SPINNING') {
-          els.drawBtn.textContent = 'MEMUTAR...';
-          els.drawBtn.disabled = true;
+          els.drawBtn.textContent = 'LEWATI PUTARAN';
+          els.drawBtn.disabled = false;
           els.drawBtn.hidden = false;
           if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         } else if (currentUiPhase === 'REVEAL_WINNER') {
@@ -209,6 +216,18 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
           els.drawBtn.hidden = false;
           if (els.forfeitBtn) els.forfeitBtn.hidden = true;
         }
+      }
+    }
+
+    if (els.btnSubtext) {
+      if (currentUiPhase === 'SPINNING') {
+        els.btnSubtext.textContent = 'ENTER / SPASI - LEWATI PUTARAN';
+      } else if (currentUiPhase === 'REVEAL_WINNER') {
+        els.btnSubtext.textContent = isLastMainPrize
+          ? 'ENTER - LIHAT SEMUA PEMENANG'
+          : 'ENTER - LANJUT & PUTAR';
+      } else if (currentUiPhase === 'IDLE') {
+        els.btnSubtext.textContent = 'ENTER - MULAI UNDIAN';
       }
     }
 
@@ -368,9 +387,16 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
     }
   }
 
+  function handleSkip(): boolean {
+    if (currentUiPhase !== 'SPINNING') return false;
+    return skipRoulette();
+  }
+
   async function handleMainClick() {
     if (currentUiPhase === 'IDLE') {
       await handleDraw();
+    } else if (currentUiPhase === 'SPINNING') {
+      handleSkip();
     } else if (currentUiPhase === 'REVEAL_WINNER' && !els.advanceBtn) {
       handleAdvance();
       if ((currentUiPhase as string) === 'IDLE') {
@@ -466,6 +492,11 @@ export function mountRaffleApp(root: HTMLElement, deps?: ControllerDependencies 
   function handleKeyDown(e: KeyboardEvent) {
     if (els.resetDialog && els.resetDialog.open) return;
     if (els.intermissionDialog && els.intermissionDialog.open) return;
+    if (currentUiPhase === 'SPINNING' && (e.key === 'Enter' || e.key === ' ' || e.code === 'Space')) {
+      e.preventDefault();
+      handleSkip();
+      return;
+    }
     if (e.key === 'Enter') {
       if (currentUiPhase === 'IDLE') {
         handleDraw();

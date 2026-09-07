@@ -15,6 +15,22 @@ export const DEFAULT_ROULETTE_DURATION_MS = 7000;
 export const REDUCED_MOTION_DURATION_MS = 50;
 
 let currentRotation = 0;
+let activeSkip: (() => void) | null = null;
+
+/**
+ * Fast-forward the spin that is currently running: the wheel snaps to its final
+ * angle and the readout locks on the winner immediately.
+ * Returns false when no spin is in flight.
+ */
+export function skipRoulette(): boolean {
+  if (!activeSkip) return false;
+  activeSkip();
+  return true;
+}
+
+export function isRouletteSpinning(): boolean {
+  return activeSkip !== null;
+}
 
 export function getCurrentRotation(): number {
   return currentRotation;
@@ -122,16 +138,34 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
         }
 
         await new Promise<void>(resolve => {
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            activeSkip = null;
+            currentRotation = targetAngle;
+            resolve();
+          };
+
           anime({
             targets: wheel,
             rotate: targetAngle,
             duration: duration,
             easing: 'easeOutCubic',
-            complete: () => {
-              currentRotation = targetAngle;
-              resolve();
-            }
+            complete: finish
           });
+
+          // Operator escape hatch: land the wheel on the winner right now.
+          activeSkip = () => {
+            anime.remove(proxy);
+            anime.remove(wheel);
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            if (readout) {
+              readout.textContent = winner;
+            }
+            onTick?.(1);
+            finish();
+          };
         });
       }
 
@@ -145,6 +179,7 @@ export async function animateRoulette(options: RouletteMotionOptions): Promise<v
       }
     }
   } finally {
+    activeSkip = null;
     if (readout) readout.textContent = winner;
   }
 }

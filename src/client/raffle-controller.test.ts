@@ -703,7 +703,7 @@ describe('Raffle Controller Two-Round Flow & Intermission Integration', () => {
     // First draw in small round
     expect(spinBtn.textContent).toContain('PUTAR SEKARANG');
     spinBtn.click();
-    expect(spinBtn.textContent).toBe('MEMUTAR...');
+    expect(spinBtn.textContent).toBe('LEWATI PUTARAN');
     await Promise.resolve();
     await Promise.resolve();
 
@@ -741,6 +741,66 @@ describe('Raffle Controller Two-Round Flow & Intermission Integration', () => {
     expect(root.getAttribute('data-phase')).toBe('COMPLETE');
     expect(spinBtn.textContent).toBe('SEMUA PEMENANG SELESAI');
     expect(spinBtn.disabled).toBe(true);
+  });
+
+  it('spin can be skipped by clicking the primary button or pressing Enter/Space', async () => {
+    document.body.innerHTML = `
+      <div data-raffle-app>
+        <div class="round-badge" data-role="round-badge">BABAK HADIAH HIBURAN</div>
+        <canvas class="confetti-canvas" data-role="confetti-canvas"></canvas>
+        <div data-role="wheel"></div>
+        <div data-role="winner-display"></div>
+        <div data-role="active-count"></div>
+        <div data-role="prize-position"></div>
+        <button data-role="spin-button">PUTAR SEKARANG</button>
+        <div class="btn-subtext">ENTER - MULAI UNDIAN</div>
+        <button data-role="forfeit-button" hidden>Hangus</button>
+        <div data-role="winner-history"></div>
+        <div data-role="error"></div>
+      </div>
+    `;
+    root = document.querySelector('[data-raffle-app]')!;
+
+    let resolveSpin: () => void = () => {};
+    const skipRoulette = vi.fn(() => {
+      resolveSpin();
+      return true;
+    });
+    deps = {
+      ...deps,
+      selectWinner: vi.fn().mockReturnValueOnce('A1').mockReturnValueOnce('A2'),
+      animateRoulette: vi.fn(() => new Promise<void>((res) => { resolveSpin = res; })),
+      skipRoulette
+    };
+
+    unmount = mountRaffleApp(root, deps);
+    const spinBtn = root.querySelector('[data-role="spin-button"]') as HTMLButtonElement;
+    const subtext = root.querySelector('.btn-subtext') as HTMLElement;
+
+    spinBtn.click();
+    expect(root.getAttribute('data-phase')).toBe('SPINNING');
+    expect(spinBtn.textContent).toBe('LEWATI PUTARAN');
+    expect(spinBtn.disabled).toBe(false);
+    expect(subtext.textContent).toBe('ENTER / SPASI - LEWATI PUTARAN');
+
+    spinBtn.click(); // skip
+    expect(skipRoulette).toHaveBeenCalledTimes(1);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
+
+    // Skip is inert once the winner is revealed
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space' }));
+    expect(skipRoulette).toHaveBeenCalledTimes(1);
+
+    // Enter advances and starts the next spin, Space then skips it
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(root.getAttribute('data-phase')).toBe('SPINNING');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space' }));
+    expect(skipRoulette).toHaveBeenCalledTimes(2);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(root.getAttribute('data-phase')).toBe('REVEAL_WINNER');
   });
 
   it('reset click opens dialog, cancel preserves state, confirm resets', async () => {
